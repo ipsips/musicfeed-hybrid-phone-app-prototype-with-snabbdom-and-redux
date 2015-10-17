@@ -1,6 +1,6 @@
 var express = require('express'),
     app = module.exports = express(),
-    port = process.argv[2] || 5151;
+    port = process.argv[2] || 5551;
 
 app.use(express.static(__dirname+'/www'));
 
