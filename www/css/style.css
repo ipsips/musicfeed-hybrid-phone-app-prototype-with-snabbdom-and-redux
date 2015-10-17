@@ -1,0 +1,943 @@
+@charset 'UTF-8';
+/**
+ * Global Reset of all HTML Elements
+ *
+ * Resetting all of our HTML Elements ensures a smoother
+ * visual transition between browsers. If you don't believe me,
+ * try temporarily commenting out this block of code, then go
+ * and look at Mozilla versus Safari, both good browsers with
+ * a good implementation of CSS. The thing is, all browser CSS
+ * defaults are different and at the end of the day if visual
+ * consistency is what we're shooting for, then we need to
+ * make sure we're resetting all spacing elements.
+ *
+ */
+html,
+body {
+  border: 0;
+  font-family: "Helvetica-Neue", "Helvetica", Arial, sans-serif;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+}
+div,
+span,
+object,
+iframe,
+img,
+table,
+caption,
+thead,
+tbody,
+tfoot,
+tr,
+tr,
+td,
+article,
+aside,
+canvas,
+details,
+figure,
+hgroup,
+menu,
+nav,
+footer,
+header,
+section,
+summary,
+mark,
+audio,
+video {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+address,
+cit,
+code,
+del,
+dfn,
+em,
+ins,
+q,
+samp,
+small,
+strong,
+sub,
+sup,
+b,
+i,
+hr,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+legend,
+label {
+  border: 0;
+  font-size: 100%;
+  vertical-align: baseline;
+  margin: 0;
+  padding: 0;
+}
+ul,
+ol,
+ul ul,
+ol ol,
+ul ol,
+ol ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+article,
+aside,
+canvas,
+figure,
+figure img,
+figcaption,
+hgroup,
+footer,
+header,
+nav,
+section,
+audio,
+video {
+  display: block;
+}
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+table caption,
+table th,
+table td {
+  text-align: left;
+  vertical-align: middle;
+}
+a img {
+  border: 0;
+}
+:focus {
+  outline: 0;
+}
+* {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+@font-face {
+  font-family: "Musicfeed Icons 2.0";
+  src: url('../fonts/Musicfeed Icons 2.0.eot');
+  src: url('../fonts/Musicfeed Icons 2.0.eot?#iefix') format('eot'), url('../fonts/Musicfeed Icons 2.0.woff') format('woff'), url('../fonts/Musicfeed Icons 2.0.ttf') format('truetype'), url('../fonts/Musicfeed Icons 2.0.svg#Musicfeed Icons 2.0') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+.mf:before {
+  display: inline-block;
+  font-family: "Musicfeed Icons 2.0";
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.mf-lg {
+  font-size: 1.3333333333333333em;
+  line-height: 0.75em;
+  vertical-align: -15%;
+}
+.mf-2x {
+  font-size: 2em;
+}
+.mf-3x {
+  font-size: 3em;
+}
+.mf-4x {
+  font-size: 4em;
+}
+.mf-5x {
+  font-size: 5em;
+}
+.mf-fw {
+  width: 1.2857142857142858em;
+  text-align: center;
+}
+.mf-musicfeed:before {
+  content: "\F000";
+}
+.mf-musicfeed-outline:before {
+  content: "\F001";
+}
+.mf-musicfeed-outline-2pt:before {
+  content: "\F002";
+}
+.mf-menu:before {
+  content: "\F010";
+}
+.mf-menu-2pt:before {
+  content: "\F011";
+}
+.mf-magnifying-glass:before {
+  content: "\F020";
+}
+.mf-magnifying-glass-2pt:before {
+  content: "\F021";
+}
+.mf-heart:before {
+  content: "\F030";
+}
+.mf-heart-outline:before {
+  content: "\F031";
+}
+.mf-heart-outline-2pt:before {
+  content: "\F032";
+}
+.mf-chatbubble:before {
+  content: "\F040";
+}
+.mf-chatbubble-outline:before {
+  content: "\F041";
+}
+.mf-chatbubble-outline-2pt:before {
+  content: "\F042";
+}
+.mf-plus:before {
+  content: "\F050";
+}
+.mf-plus-2pt:before {
+  content: "\F051";
+}
+.mf-plus-circled:before {
+  content: "\F052";
+}
+.mf-plus-circled-2pt:before {
+  content: "\F053";
+}
+.mf-plus-circled-outline:before {
+  content: "\F054";
+}
+.mf-plus-circled-outline-2pt:before {
+  content: "\F055";
+}
+.mf-minus:before {
+  content: "\F060";
+}
+.mf-minus-2pt:before {
+  content: "\F061";
+}
+.mf-x:before {
+  content: "\F070";
+}
+.mf-x-2pt:before {
+  content: "\F071";
+}
+.mf-x-circled:before {
+  content: "\F072";
+}
+.mf-x-circled-2pt:before {
+  content: "\F073";
+}
+.mf-close-circled-outline:before {
+  content: "\F074";
+}
+.mf-close-circled-outline-2pt:before {
+  content: "\F075";
+}
+.mf-trash:before {
+  content: "\F080";
+}
+.mf-trash-2pt:before {
+  content: "\F081";
+}
+.mf-trash-outline:before {
+  content: "\F083";
+}
+.mf-trash-outline-2pt:before {
+  content: "\F084";
+}
+.mf-ellipsis:before {
+  content: "\F090";
+}
+.mf-ellipsis-2pt:before {
+  content: "\F091";
+}
+.mf-ellipsis-outline:before {
+  content: "\F092";
+}
+.mf-download:before {
+  content: "\F0A0";
+}
+.mf-download-2pt:before {
+  content: "\F0A1";
+}
+.mf-download-outline:before {
+  content: "\F0A2";
+}
+.mf-download-outline-2pt:before {
+  content: "\F0A3";
+}
+.mf-upload:before {
+  content: "\F0B0";
+}
+.mf-upload-2pt:before {
+  content: "\F0B1";
+}
+.mf-upload-outline:before {
+  content: "\F0B2";
+}
+.mf-upload-oultine-2pt:before {
+  content: "\F0B3";
+}
+.mf-padlock:before {
+  content: "\F0C0";
+}
+.mf-padlock-2pt:before {
+  content: "\F0C1";
+}
+.mf-pencil:before {
+  content: "\F0D0";
+}
+.mf-pencil-2pt:before {
+  content: "\F0D1";
+}
+.mf-arrow-up:before {
+  content: "\F100";
+}
+.mf-arrow-up-2pt:before {
+  content: "\F101";
+}
+.mf-arrow-up-obtuse:before {
+  content: "\F110";
+}
+.mf-arrow-up-obtuse-2pt:before {
+  content: "\F111";
+}
+.mf-arrow-down:before {
+  content: "\F130";
+}
+.mf-arrow-down-2pt:before {
+  content: "\F131";
+}
+.mf-arrow-down-obtuse:before {
+  content: "\F140";
+}
+.mf-arrow-down-obtuse-2pt:before {
+  content: "\F141";
+}
+.mf-arrow-left:before {
+  content: "\F160";
+}
+.mf-arrow-left-2pt:before {
+  content: "\F161";
+}
+.mf-arrow-left-obtuse:before {
+  content: "\F170";
+}
+.mf-arrow-left-obtuse-2pt:before {
+  content: "\F171";
+}
+.mf-arrow-right:before {
+  content: "\F190";
+}
+.mf-arrow-right-2pt:before {
+  content: "\F191";
+}
+.mf-arrow-right-obtuse:before {
+  content: "\F1A0";
+}
+.mf-arrow-right-obtuse-2pt:before {
+  content: "\F1A1";
+}
+.mf-double-arrow-right-2pt:before {
+  content: "\F1B1";
+}
+.mf-checkmark:before {
+  content: "\F200";
+}
+.mf-checkmark-2pt:before {
+  content: "\F201";
+}
+.mf-checkbox:before {
+  content: "\F202";
+}
+.mf-checkbox-2pt:before {
+  content: "\F203";
+}
+.mf-checkbox-checked:before {
+  content: "\F204";
+}
+.mf-checkbox-checked-2pt:before {
+  content: "\F205";
+}
+.mf-checkbox-solid:before {
+  content: "\F206";
+}
+.mf-checkbox-solid-checked:before {
+  content: "\F207";
+}
+.mf-checkbox-solid-checked-2pt:before {
+  content: "\F208";
+}
+.mf-disc:before {
+  content: "\F209";
+}
+.mf-disc-checked:before {
+  content: "\F210";
+}
+.mf-disc-checked-2pt:before {
+  content: "\F211";
+}
+.mf-circle:before {
+  content: "\F212";
+}
+.mf-circle-2pt:before {
+  content: "\F213";
+}
+.mf-circle-checked:before {
+  content: "\F214";
+}
+.mf-circle-checked-2pt:before {
+  content: "\F215";
+}
+.mf-circle-filled:before {
+  content: "\F216";
+}
+.mf-circle-filled-2pt:before {
+  content: "\F217";
+}
+.mf-play:before {
+  content: "\F300";
+}
+.mf-pause:before {
+  content: "\F310";
+}
+.mf-skip-backward:before {
+  content: "\F320";
+}
+.mf-skip-forward:before {
+  content: "\F330";
+}
+.mf-rewind:before {
+  content: "\F340";
+}
+.mf-fastforward:before {
+  content: "\F350";
+}
+.mf-record-disc:before {
+  content: "\F400";
+}
+.mf-add-to-list:before {
+  content: "\F410";
+}
+.mf-airplay:before {
+  content: "\F420";
+}
+.mf-airplay-2pt:before {
+  content: "\F421";
+}
+.mf-mic:before {
+  content: "\F430";
+}
+.mf-mic-2pt:before {
+  content: "\F431";
+}
+.mf-chain-links:before {
+  content: "\F440";
+}
+.mf-chain-links-2pt:before {
+  content: "\F441";
+}
+.mf-gear:before {
+  content: "\F450";
+}
+.mf-gear-2pt:before {
+  content: "\F451";
+}
+.mf-bell:before {
+  content: "\F460";
+}
+.mf-person-outline:before {
+  content: "\F500";
+}
+.mf-person-solid:before {
+  content: "\F501";
+}
+.mf-person-outline-2pt:before {
+  content: "\F502";
+}
+.mf-person-circled-outline:before {
+  content: "\F510";
+}
+.mf-person-circled-outline-2pt:before {
+  content: "\F511";
+}
+.mf-person-circled-solid:before {
+  content: "\F512";
+}
+.mf-person-circled-solid-2pt:before {
+  content: "\F513";
+}
+.mf-person-circled-solid-inverse:before {
+  content: "\F514";
+}
+.mf-person-circled-solid-inverse-2pt:before {
+  content: "\F515";
+}
+.mf-compass:before {
+  content: "\F600";
+}
+.mf-compass-outline:before {
+  content: "\F601";
+}
+.mf-compass-outline-2pt:before {
+  content: "\F602";
+}
+.mf-no-sign:before {
+  content: "\F610";
+}
+.mf-no-sign-2pt:before {
+  content: "\F611";
+}
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-family: -apple-system, 'SF', 'SF UI', 'SF Display', 'SF UI Display', 'Helvetica Neue', sans-serif;
+  background: #e9e9e9;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+#app {
+  overflow: hidden;
+  height: 100%;
+}
+#views-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+#views-container > div {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.3s ease-in-out;
+}
+#views-container.feed #feed {
+  transform: translateX(0%);
+}
+#views-container.feed #search {
+  transform: translateX(100%);
+}
+#views-container.feed #me {
+  transform: translateX(100%);
+}
+#views-container.search #feed {
+  transform: translateX(-100%);
+}
+#views-container.search #search {
+  transform: translateX(0%);
+}
+#views-container.search #me {
+  transform: translateX(100%);
+}
+#views-container.me #feed {
+  transform: translateX(-100%);
+}
+#views-container.me #search {
+  transform: translateX(-100%);
+}
+#views-container.me #me {
+  transform: translateX(0%);
+}
+.view {
+  height: 100%;
+  overflow: hidden;
+  background: #e9e9e9;
+}
+.view.loading:after {
+  font-family: "Musicfeed Icons 2.0";
+  content: '\F000';
+  color: #bcbcbe;
+  font-size: 60px;
+  line-height: 1;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 60px;
+  height: 60px;
+  margin: -30px;
+  animation: funkySpin 3s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+}
+@keyframes funkySpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(720deg);
+  }
+}
+#navbar {
+  position: absolute;
+  z-index: 10;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 44px;
+  background-color: white;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+  transition: transform .3s;
+  -webkit-box-sizing: content-box;
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  padding-top: 20px;
+}
+#navbar li {
+  float: left;
+  width: 52px;
+  height: 44px;
+  line-height: 44px;
+  font-size: 32px;
+  text-align: center;
+}
+#navbar li:nth-child(2) {
+  width: 100%;
+  padding: 0 52px;
+  margin: 0 -52px;
+  font-size: 17px;
+  font-weight: 600;
+}
+#navbar li a,
+#navbar li i {
+  display: inline-block;
+  height: 44px;
+}
+#navbar li a {
+  color: #201E26;
+  padding: 0 10px;
+}
+#navbar li i:before {
+  line-height: 44px;
+}
+#navbar.hide {
+  transform: translateY(-100%);
+}
+#navbar.feed li:nth-child(3) a {
+  color: #1988FF;
+}
+#navbar.me {
+  background-color: transparent;
+  box-shadow: none;
+}
+#navbar.me li a {
+  color: white;
+}
+#tabbar {
+  position: absolute;
+  z-index: 10;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 50px;
+  background-color: white;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+  transition: transform .3s;
+}
+#tabbar li {
+  float: left;
+  width: 33%;
+  height: 50px;
+  line-height: 50px;
+  font-size: 32px;
+  text-align: center;
+  opacity: .3;
+}
+#tabbar li.active {
+  opacity: 1;
+}
+#tabbar li a,
+#tabbar li i {
+  display: inline-block;
+  height: 44px;
+}
+#tabbar li a {
+  color: #201E26;
+  padding: 0 20px;
+}
+#tabbar li i:before {
+  line-height: 50px;
+}
+#tabbar.hide {
+  transform: translateY(100%);
+}
+#feed > div {
+  height: 100%;
+  width: 100%;
+  -webkit-box-sizing: content-box;
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  padding-right: 30px;
+  -webkit-overflow-scrolling: touch;
+  overflow: auto;
+}
+#feed > div > ul {
+  padding: 64px 0 50px;
+}
+#feed li.entry {
+  color: white;
+  position: relative;
+  padding-top: 100%;
+  height: 0;
+  background-size: auto 135%;
+  background-position: center;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+#feed li.entry > * {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  bottom: 0;
+  margin: 0 15px;
+}
+#feed li.entry:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMSAxIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIj48bGluZWFyR3JhZGllbnQgaWQ9Imxlc3NoYXQtZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9InJnYigzNywgMzEsIDUxKSIgc3RvcC1vcGFjaXR5PSIwIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSJyZ2IoMzcsIDMxLCA1MSkiIHN0b3Atb3BhY2l0eT0iMC44Ii8+PC9saW5lYXJHcmFkaWVudD48cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSJ1cmwoI2xlc3NoYXQtZ2VuZXJhdGVkKSIgLz48L3N2Zz4=);
+  background-image: -webkit-linear-gradient(top, rgba(37, 31, 51, 0) 0%, rgba(37, 31, 51, 0.8) 100%);
+  background-image: -moz-linear-gradient(top, rgba(37, 31, 51, 0) 0%, rgba(37, 31, 51, 0.8) 100%);
+  background-image: -o-linear-gradient(top, rgba(37, 31, 51, 0) 0%, rgba(37, 31, 51, 0.8) 100%);
+  background-image: linear-gradient(to bottom, rgba(37, 31, 51, 0) 0%, rgba(37, 31, 51, 0.8) 100%);
+  mix-blend-mode: darken;
+}
+#feed li.entry:after {
+  content: '\F300';
+  font-family: "Musicfeed Icons 2.0";
+  font-size: 112px;
+  line-height: 1;
+  position: absolute;
+  left: 51%;
+  top: 46%;
+  width: 112px;
+  height: 112px;
+  margin: -56px;
+}
+#feed li.entry .title {
+  bottom: 50px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 24px;
+  display: -webkit-box;
+  max-height: 48px;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#feed li.entry .author {
+  bottom: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+#feed li.entry .author u {
+  display: inline-block;
+  vertical-align: top;
+  background-size: cover;
+  background-position: center;
+  border-radius: 100%;
+  width: 20px;
+  height: 20px;
+  margin: -2px 7px -2px 0;
+}
+#feed li.entry .author.verified u:after {
+  content: '';
+}
+#feed li.entry .actions {
+  bottom: 20px;
+  left: auto;
+  right: 0;
+  font-size: 24px;
+  line-height: 1;
+  margin: -4px 15px;
+}
+#feed li.entry .actions li,
+#feed li.entry .actions i,
+#feed li.entry .actions b {
+  display: inline-block;
+  vertical-align: middle;
+}
+#feed li.entry .actions li {
+  width: 30px;
+  text-align: right;
+}
+#feed li.entry .actions li + li {
+  margin-left: 40px;
+}
+#feed li.entry .actions b {
+  font-weight: 400;
+  font-size: 10px;
+  margin-left: -50px;
+}
+#feed li.entry .actions b + i {
+  margin-left: 6px;
+}
+#feed li.entry.loved .actions li.heart i {
+  color: #FF1957;
+}
+#search:after {
+  content: 'Search';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 40px;
+  margin-top: -40px;
+  text-align: center;
+  font-size: 40px;
+  line-height: 1;
+  color: #201E26;
+}
+#me .head,
+#profile .head {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 190px;
+  overflow: hidden;
+}
+#me .head .profile-pic,
+#profile .head .profile-pic,
+#me .head .name,
+#profile .head .name,
+#me .head .followings,
+#profile .head .followings {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  color: white;
+}
+#me .head .profile-pic,
+#profile .head .profile-pic {
+  left: 50%;
+  top: 35px;
+  width: 80px;
+  height: 80px;
+  margin-left: -40px;
+  border-radius: 100%;
+  background-size: cover;
+  background-position: center;
+}
+#me .head .name,
+#profile .head .name {
+  top: 125px;
+  font-size: 17px;
+}
+#me .head .followings,
+#profile .head .followings {
+  top: 155px;
+  font-size: 12px;
+}
+#me .head .followings li,
+#profile .head .followings li {
+  display: inline-block;
+}
+#me .head .followings li + li:before,
+#profile .head .followings li + li:before {
+  content: '\00a0\00a0\00a0·\00a0\00a0\00a0';
+}
+#me .head a,
+#profile .head a {
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+  transition: color .15s;
+}
+#me .head a:hover,
+#profile .head a:hover,
+#me .head a:active,
+#profile .head a:active {
+  color: white;
+}
+#me .head:before,
+#profile .head:before,
+#me .head .backdrop,
+#profile .head .backdrop {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+#me .head .backdrop,
+#profile .head .backdrop {
+  background-size: cover;
+  background-position: center;
+  -webkit-filter: blur(25px);
+}
+#me .head:before,
+#profile .head:before {
+  content: '';
+  z-index: 1;
+  background-color: rgba(37, 31, 51, 0.6);
+  background-blend-mode: multiply;
+}
+#me .menu,
+#profile .menu {
+  position: absolute;
+  left: 0;
+  top: 190px;
+  width: 100%;
+  height: 44px;
+  background-color: white;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+#me .menu ul,
+#profile .menu ul {
+  display: table;
+  width: 100%;
+  height: 44px;
+}
+#me .menu li,
+#profile .menu li {
+  display: table-cell;
+  text-align: center;
+  line-height: 44px;
+}
+#me .menu a,
+#profile .menu a {
+  text-decoration: none;
+  color: rgba(32, 30, 38, 0.4);
+}
+#me .menu a:hover,
+#profile .menu a:hover,
+#me .menu a.active,
+#profile .menu a.active {
+  color: #201E26;
+}
