@@ -1,0 +1,5 @@
+{
+    "name": "mf-proto",
+    "script": "server.js",
+    "cwd": "."
+}
