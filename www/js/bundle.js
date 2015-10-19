@@ -2118,39 +2118,86 @@ var _Navbar = require('./Navbar');
 var _Navbar2 = _interopRequireDefault(_Navbar);
 
 exports['default'] = {
-    onInsert: function onInsert() {
+    onInsert: function onInsert(vnode) {
+        this.feed = vnode;
         setTimeout(function () {
             return window.store.dispatch((0, _actionsCreatorsFeed.fetchFeed)());
         });
     },
     onScrollableInsert: function onScrollableInsert(vnode) {
-        vnode.elm.addEventListener('scroll', this.onScroll.bind(this), true);
+        this.ul = vnode.children[0];
+        this.feedWidth();
+        window.addEventListener('resize', this.feedWidth.bind(this));
+        // vnode.elm.addEventListener('scroll', this.onScroll.bind(this), true);
+        vnode.elm.addEventListener('scroll', this.stackItems.bind(this), true);
     },
-    onScroll: function onScroll(evt) {
-        if (!this.scrolling) this.scrollStart();
-
-        clearTimeout(this.scrollTimer);
+    /*onScroll(evt) {
+        this.stackItems(evt);
+         if (!this.scrolling)
+            this.scrollStart();
+         clearTimeout(this.scrollTimer);
         this.scrollTimer = setTimeout(this.scrollStop.bind(this), 100);
     },
-    scrollStart: function scrollStart() {
+    scrollStart() {
         this.scrolling = true;
-        window.store.dispatch((0, _actionsCreatorsFeed.scrollFeed)(true));
+        window.store.dispatch(scrollFeed(true));
     },
-    scrollStop: function scrollStop() {
+    scrollStop() {
         this.scrolling = false;
-        window.store.dispatch((0, _actionsCreatorsFeed.scrollFeed)(false));
+        window.store.dispatch(scrollFeed(false));
+    },*/
+    feedWidth: function feedWidth() {
+        var _this = this;
+
+        requestAnimationFrame(function () {
+            return _this.width = _this.ul.elm.offsetWidth;
+        });
+    },
+    stackItems: function stackItems(evt) {
+        var _this2 = this;
+
+        requestAnimationFrame(function () {
+            var stackIdx = Math.floor(evt.target.scrollTop / _this2.width);
+
+            if (stackIdx != _this2.stackIdx) _this2.stackItem(stackIdx);
+        });
+    },
+    stackItem: function stackItem(stackIdx) {
+        this.stackIdx = stackIdx;
+
+        var stackItem = this.ul.elm.children[this.stackIdx],
+            nextItem = this.ul.elm.children[this.stackIdx + 1],
+            afterNextItem = this.ul.elm.children[this.stackIdx + 2];
+
+        if (stackItem) {
+            stackItem.classList.add('hidden');
+
+            var stackClone = stackItem.cloneNode(true);
+            stackClone.setAttribute('id', 'stacked');
+
+            this.feed.elm.appendChild(stackClone);
+
+            if (this.stackClone) this.feed.elm.removeChild(this.stackClone);
+
+            this.stackClone = stackClone;
+        }
+
+        if (nextItem) {
+            nextItem.classList.remove('hidden');
+            nextItem.classList.add('shadow');
+        }
+
+        if (afterNextItem) afterNextItem.classList.remove('shadow');
     },
     onScrollableDestroy: function onScrollableDestroy(vnode) {
         vnode.elm.removeEventListener('scroll', this.onScroll);
     },
-    onWebkitTransitionEnd: function onWebkitTransitionEnd(evt) {
+    /*onWebkitTransitionEnd(evt) {
         //  fix for webkit issue: scrolling freezes
         //  after transition/animation
-        evt.target.style.overflowY = 'hidden';
-        setTimeout(function () {
-            return evt.target.style.overflowY = 'auto';
-        });
-    },
+        evt.currentTarget.style.overflowY = 'hidden';
+        setTimeout(() => evt.currentTarget.style.overflowY = 'auto');
+    },*/
     view: function view(props) {
         var state = window.store.getState();
 
@@ -2160,8 +2207,8 @@ exports['default'] = {
             'class': {
                 loading: state.feed.isFetching
             },
-            'on-webkitTransitionEnd': this.onWebkitTransitionEnd,
-            'hook-insert': this.onInsert
+            // 'on-webkitTransitionEnd': this.onWebkitTransitionEnd,
+            'hook-insert': this.onInsert.bind(this)
         });
 
         var scrollableProps = {
@@ -2179,7 +2226,7 @@ exports['default'] = {
                 (0, _snabbdomJsx.html)(
                     'ul',
                     null,
-                    state.feed.tracks.map(function (track) {
+                    state.feed.tracks.map(function (track, idx) {
                         return (0, _snabbdomJsx.html)(
                             'li',
                             { classNames: 'entry',
@@ -2188,38 +2235,43 @@ exports['default'] = {
                                     backgroundImage: 'url(' + track.picture + ')'
                                 } },
                             (0, _snabbdomJsx.html)(
-                                'h3',
-                                { classNames: 'title' },
-                                track.name
-                            ),
-                            (0, _snabbdomJsx.html)(
-                                'h6',
-                                { classNames: 'author',
-                                    'class-verified': track.is_verified_user },
-                                (0, _snabbdomJsx.html)('u', { style: {
-                                        backgroundImage: 'url(' + track.author_picture + ')'
-                                    } }),
-                                track.author_name
-                            ),
-                            (0, _snabbdomJsx.html)(
-                                'ul',
-                                { classNames: 'actions' },
+                                'div',
+                                null,
+                                (0, _snabbdomJsx.html)('i', { classNames: 'mf mf-play' }),
                                 (0, _snabbdomJsx.html)(
-                                    'li',
-                                    { classNames: 'ellipsis' },
-                                    (0, _snabbdomJsx.html)('i', { classNames: 'mf mf-ellipsis' })
+                                    'h3',
+                                    { classNames: 'title' },
+                                    track.name
                                 ),
                                 (0, _snabbdomJsx.html)(
-                                    'li',
-                                    { classNames: 'heart' },
+                                    'h6',
+                                    { classNames: 'author',
+                                        'class-verified': track.is_verified_user },
+                                    (0, _snabbdomJsx.html)('u', { style: {
+                                            backgroundImage: 'url(' + track.author_picture + ')'
+                                        } }),
+                                    track.author_name
+                                ),
+                                (0, _snabbdomJsx.html)(
+                                    'ul',
+                                    { classNames: 'actions' },
                                     (0, _snabbdomJsx.html)(
-                                        'b',
-                                        null,
-                                        (0, _humanFormat2['default'])(track.likes_count, {
-                                            decimals: 1
-                                        })
+                                        'li',
+                                        { classNames: 'ellipsis' },
+                                        (0, _snabbdomJsx.html)('i', { classNames: 'mf mf-ellipsis' })
                                     ),
-                                    (0, _snabbdomJsx.html)('i', { classNames: 'mf mf-heart' })
+                                    (0, _snabbdomJsx.html)(
+                                        'li',
+                                        { classNames: 'heart' },
+                                        (0, _snabbdomJsx.html)(
+                                            'b',
+                                            null,
+                                            (0, _humanFormat2['default'])(track.likes_count, {
+                                                decimals: 1
+                                            })
+                                        ),
+                                        (0, _snabbdomJsx.html)('i', { classNames: 'mf mf-heart' })
+                                    )
                                 )
                             )
                         );
@@ -2288,8 +2340,6 @@ exports['default'] = {
             },
             'hook-prepatch': this.onPrepatch.bind(this, state)
         });
-
-        if (state.view.current == 'me' && state.me.data) console.log('state:', state);
 
         if (!state.me.data) return (0, _snabbdomJsx.html)(
             'div',
@@ -2415,8 +2465,8 @@ exports['default'] = {
             'nav',
             {
                 id: 'navbar',
-                classNames: 'feed',
-                'class-hide': state.feed.isScrolling },
+                classNames: 'feed' /*
+                                   class-hide={state.feed.isScrolling}*/ },
             (0, _snabbdomJsx.html)(
                 'ul',
                 null,
@@ -2541,8 +2591,8 @@ exports['default'] = {
         return (0, _snabbdomJsx.html)(
             'nav',
             {
-                id: 'tabbar',
-                'class-hide': state.feed.isScrolling },
+                id: 'tabbar' /*
+                             class-hide={state.feed.isScrolling}*/ },
             (0, _snabbdomJsx.html)(
                 'ul',
                 null,
