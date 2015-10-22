@@ -92,339 +92,6 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],2:[function(require,module,exports){
-// UMD: https://github.com/umdjs/umd/blob/master/returnExports.js
-(function (root, factory) {
-  /* global define: false */
-  if (typeof define === 'function' && define.amd) {
-    // AMD. Register as an anonymous module.
-    define([], factory)
-  } else if (typeof exports === 'object') {
-    // Node. Does not work with strict CommonJS, but
-    // only CommonJS-like environments that support module.exports,
-    // like Node.
-    module.exports = factory()
-  } else {
-    // Browser globals (root is window)
-    root.humanFormat = factory()
-  }
-}(this, function () {
-  'use strict'
-
-  // =================================================================
-
-  function assignBase (dst, src) {
-    var prop
-    for (prop in src) {
-      if (has(src, prop)) {
-        dst[prop] = src[prop]
-      }
-    }
-  }
-  function assign (dst, src) {
-    var i, n
-    for (i = 0, n = arguments.length; i < n; ++i) {
-      src = arguments[i]
-      if (src) {
-        assignBase(dst, src)
-      }
-    }
-    return dst
-  }
-
-  function compareLongestFirst (a, b) {
-    return b.length - a.length
-  }
-
-  function compareSmallestFactorFirst (a, b) {
-    return a.factor - b.factor
-  }
-
-  // https://www.npmjs.org/package/escape-regexp
-  function escapeRegexp (str) {
-    return str.replace(/([.*+?=^!:${}()|[\]\/\\])/g, '\\$1')
-  }
-
-  function forEach (arr, iterator) {
-    var i, n
-    for (i = 0, n = arr.length; i < n; ++i) {
-      iterator(arr[i], i)
-    }
-  }
-
-  function forOwn (obj, iterator) {
-    var prop
-    for (prop in obj) {
-      if (has(obj, prop)) {
-        iterator(obj[prop], prop)
-      }
-    }
-  }
-
-  var has = (function (hasOwnProperty) {
-    return function has (obj, prop) {
-      return obj && hasOwnProperty.call(obj, prop)
-    }
-  })(Object.prototype.hasOwnProperty)
-
-  var toString = (function (toString_) {
-    return function toString (val) {
-      return toString_.call(val)
-    }
-  })(Object.prototype.toString)
-
-  function isDefined (val) {
-    /* jshint eqnull:true */
-    return val != null
-  }
-
-  var isNumber = (function (tag) {
-    return function isNumber (value) {
-      return (value === value) && (toString(value) === tag) // eslint-disable-line no-self-compare
-    }
-  })(toString(0))
-
-  var isString = (function (tag) {
-    return function isString (value) {
-      return (toString(value) === tag)
-    }
-  })(toString(''))
-
-  function resolve (container, entry) {
-    while (isString(entry)) {
-      entry = container[entry]
-    }
-    return entry
-  }
-
-  function round (f, n) {
-    if (!n) {
-      return Math.round(f)
-    }
-
-    var p = Math.pow(10, n)
-    return Math.round(f * p) / p
-  }
-
-  // =================================================================
-
-  function Scale (prefixes) {
-    this._prefixes = prefixes
-
-    var escapedPrefixes = []
-    var list = []
-    forOwn(prefixes, function (factor, prefix) {
-      escapedPrefixes.push(escapeRegexp(prefix))
-
-      list.push({
-        factor: factor,
-        prefix: prefix
-      })
-    })
-
-    list.sort(compareSmallestFactorFirst)
-    this._list = list
-
-    escapedPrefixes.sort(compareLongestFirst)
-    this._regexp = new RegExp(
-      '^\\s*(\\d+(?:\\.\\d+)?)\\s*(' +
-      escapedPrefixes.join('|') +
-      ')\\s*(.*)\\s*?$',
-      'i'
-    )
-  }
-
-  Scale.create = function Scale$create (prefixesList, base, initExp) {
-    var prefixes = {}
-    var factor = initExp ? Math.pow(base, initExp) : 1
-    forEach(prefixesList, function (prefix, i) {
-      prefixes[prefix] = Math.pow(base, i + (initExp || 0))
-      factor *= base
-    })
-
-    return new Scale(prefixes)
-  }
-
-  // Binary search to find the greatest index which has a value <=.
-  Scale.prototype.findPrefix = function Scale$findPrefix (value) {
-    /* jshint bitwise: false */
-
-    var list = this._list
-    var low = 0
-    var high = list.length - 1
-
-    var mid, current
-    while (low !== high) {
-      mid = (low + high + 1) >> 1
-      current = list[mid].factor
-
-      if (current > value) {
-        high = mid - 1
-      } else {
-        low = mid
-      }
-    }
-
-    return list[low]
-  }
-
-  Scale.prototype.parse = function Scale$parse (str, strict) {
-    var matches = str.match(this._regexp)
-
-    if (!matches) {
-      return null
-    }
-
-    var prefix = matches[2]
-
-    if (!has(this._prefixes, prefix)) {
-      if (strict) {
-        return null
-      }
-
-      // FIXME
-      return null
-    }
-
-    return {
-      factor: this._prefixes[prefix],
-      prefix: prefix,
-      unit: matches[3],
-      value: +matches[1]
-    }
-  }
-
-  // =================================================================
-
-  var scales = {
-    // https://en.wikipedia.org/wiki/Binary_prefix
-    binary: Scale.create(
-      ',ki,Mi,Gi,Ti,Pi,Ei,Zi,Yi'.split(','),
-      1024
-    ),
-
-    // https://en.wikipedia.org/wiki/Metric_prefix
-    //
-    // Not all prefixes are present, only those which are multiple of
-    // 1000, because humans usually prefer to see close numbers using
-    // the same unit to ease the comparison.
-    SI: Scale.create(
-      'y,z,a,f,p,n,µ,m,,k,M,G,T,P,E,Z,Y'.split(','),
-      1000, -8
-    )
-  }
-
-  var defaults = {
-    scale: 'SI',
-
-    // Strict mode prevents parsing of incorrectly cased prefixes.
-    strict: false,
-
-    // Unit to use for formatting.
-    unit: '',
-
-    // Decimal digits for formatting.
-    decimals: 2,
-
-    // Seperator to use between value and units
-    seperator: ' '
-  }
-
-  function humanFormat (value, opts) {
-    opts = assign({}, defaults, opts)
-
-    var info = humanFormat$raw(value, opts)
-    var suffix = info.prefix + opts.unit
-    return round(info.value, opts.decimals) + (suffix ? opts.seperator + suffix : '')
-  }
-
-  function humanFormat$parse (str, opts) {
-    var info = humanFormat$parse$raw(str, opts)
-
-    return info.value * info.factor
-  }
-
-  function humanFormat$parse$raw (str, opts) {
-    if (!isString(str)) {
-      throw new TypeError('str must be a string')
-    }
-
-    // Merge default options.
-    opts = assign({}, defaults, opts)
-
-    // Get current scale.
-    var scale = resolve(scales, opts.scale)
-    if (!scale) {
-      throw new Error('missing scale')
-    }
-
-    // TODO: the unit should be checked: it might be absent but it
-    // should not differ from the one expected.
-    //
-    // TODO: if multiple units are specified, at least must match and
-    // the returned value should be: { value: <value>, unit: matchedUnit }
-
-    var info = scale.parse(str, opts.strict)
-    if (!info) {
-      throw new Error('cannot parse str')
-    }
-
-    return info
-  }
-
-  function humanFormat$raw (value, opts) {
-    // Zero is a special case, it never has any prefix.
-    if (value === 0) {
-      return {
-        value: 0,
-        prefix: ''
-      }
-    }
-
-    if (!isNumber(value)) {
-      throw new TypeError('value must be a number')
-    }
-
-    // Merge default options.
-    opts = assign({}, defaults, opts)
-
-    // Get current scale.
-    var scale = resolve(scales, opts.scale)
-    if (!scale) {
-      throw new Error('missing scale')
-    }
-
-    var prefix = opts.prefix
-    var factor
-    if (isDefined(prefix)) {
-      if (!has(scale._prefixes, prefix)) {
-        throw new Error('invalid prefix')
-      }
-
-      factor = scale._prefixes[prefix]
-    } else {
-      var _ref = scale.findPrefix(value)
-      prefix = _ref.prefix
-      factor = _ref.factor
-    }
-
-    // Rebase using current factor.
-    value /= factor
-
-    return {
-      prefix: prefix,
-      value: value
-    }
-  }
-
-  humanFormat.parse = humanFormat$parse
-  humanFormat$parse.raw = humanFormat$parse$raw
-  humanFormat.raw = humanFormat$raw
-  humanFormat.Scale = Scale
-
-  return humanFormat
-}))
-
-},{}],3:[function(require,module,exports){
 // the whatwg-fetch polyfill installs the fetch() function
 // on the global object (window or self)
 //
@@ -432,7 +99,7 @@ process.umask = function() { return 0; };
 require('whatwg-fetch');
 module.exports = self.fetch.bind(self);
 
-},{"whatwg-fetch":4}],4:[function(require,module,exports){
+},{"whatwg-fetch":3}],3:[function(require,module,exports){
 (function() {
   'use strict';
 
@@ -769,7 +436,7 @@ module.exports = self.fetch.bind(self);
   self.fetch.polyfill = true
 })();
 
-},{}],5:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 /* eslint-disable no-unused-vars */
 'use strict';
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -810,7 +477,7 @@ module.exports = Object.assign || function (target, source) {
 	return to;
 };
 
-},{}],6:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -828,7 +495,7 @@ function thunkMiddleware(_ref) {
 }
 
 module.exports = exports['default'];
-},{}],7:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -986,7 +653,7 @@ function createStore(reducer, initialState) {
     replaceReducer: replaceReducer
   };
 }
-},{"./utils/isPlainObject":13}],8:[function(require,module,exports){
+},{"./utils/isPlainObject":12}],7:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1018,7 +685,7 @@ exports.combineReducers = _utilsCombineReducers2['default'];
 exports.bindActionCreators = _utilsBindActionCreators2['default'];
 exports.applyMiddleware = _utilsApplyMiddleware2['default'];
 exports.compose = _utilsCompose2['default'];
-},{"./createStore":7,"./utils/applyMiddleware":9,"./utils/bindActionCreators":10,"./utils/combineReducers":11,"./utils/compose":12}],9:[function(require,module,exports){
+},{"./createStore":6,"./utils/applyMiddleware":8,"./utils/bindActionCreators":9,"./utils/combineReducers":10,"./utils/compose":11}],8:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1080,7 +747,7 @@ function applyMiddleware() {
 }
 
 module.exports = exports['default'];
-},{"./compose":12}],10:[function(require,module,exports){
+},{"./compose":11}],9:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1136,7 +803,7 @@ function bindActionCreators(actionCreators, dispatch) {
 }
 
 module.exports = exports['default'];
-},{"../utils/mapValues":14}],11:[function(require,module,exports){
+},{"../utils/mapValues":13}],10:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -1268,7 +935,7 @@ function combineReducers(reducers) {
 module.exports = exports['default'];
 }).call(this,require('_process'))
 
-},{"../createStore":7,"../utils/isPlainObject":13,"../utils/mapValues":14,"../utils/pick":15,"_process":1}],12:[function(require,module,exports){
+},{"../createStore":6,"../utils/isPlainObject":12,"../utils/mapValues":13,"../utils/pick":14,"_process":1}],11:[function(require,module,exports){
 /**
  * Composes single-argument functions from right to left.
  *
@@ -1294,7 +961,7 @@ function compose() {
 }
 
 module.exports = exports["default"];
-},{}],13:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1325,7 +992,7 @@ function isPlainObject(obj) {
 }
 
 module.exports = exports['default'];
-},{}],14:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 /**
  * Applies a function to every key-value pair inside an object.
  *
@@ -1346,7 +1013,7 @@ function mapValues(obj, fn) {
 }
 
 module.exports = exports["default"];
-},{}],15:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 /**
  * Picks key-value pairs from an object where values satisfy a predicate.
  *
@@ -1369,7 +1036,7 @@ function pick(obj, fn) {
 }
 
 module.exports = exports["default"];
-},{}],16:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 "use strict";
 
 var SVGNS = "http://www.w3.org/2000/svg";
@@ -1393,7 +1060,7 @@ function normalizeAttrs(attrs, nsURI, defNS, modules) {
       map[mod] = attrs[mod];
   }
   for(var key in attrs) {
-    const parts = key.split('-');
+    var parts = key.split('-');
     if(parts.length > 1)
       addAttr(parts[0], parts[1], attrs[key]);
     else if(!map[key])
@@ -1402,7 +1069,7 @@ function normalizeAttrs(attrs, nsURI, defNS, modules) {
   return map;
   
   function addAttr(namespace, key, val) {
-    const ns = map[namespace] || (map[namespace] = {});
+    var ns = map[namespace] || (map[namespace] = {});
     ns[key] = val;
   }
 }
@@ -1442,13 +1109,13 @@ module.exports = {
   svg: JSX(SVGNS, 'attrs'), 
   JSX: JSX 
 };
-},{}],17:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 module.exports = {
   array: Array.isArray,
   primitive: function(s) { return typeof s === 'string' || typeof s === 'number'; },
 };
 
-},{}],18:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 function updateClass(oldVnode, vnode) {
   var cur, name, elm = vnode.elm,
       oldClass = oldVnode.data.class || {},
@@ -1463,7 +1130,7 @@ function updateClass(oldVnode, vnode) {
 
 module.exports = {create: updateClass, update: updateClass};
 
-},{}],19:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 var is = require('../is');
 
 function arrInvoker(arr) {
@@ -1506,7 +1173,7 @@ function updateEventListeners(oldVnode, vnode) {
 
 module.exports = {create: updateEventListeners, update: updateEventListeners};
 
-},{"../is":17}],20:[function(require,module,exports){
+},{"../is":16}],19:[function(require,module,exports){
 function updateProps(oldVnode, vnode) {
   var key, cur, old, elm = vnode.elm,
       oldProps = oldVnode.data.props || {}, props = vnode.data.props || {};
@@ -1521,7 +1188,7 @@ function updateProps(oldVnode, vnode) {
 
 module.exports = {create: updateProps, update: updateProps};
 
-},{}],21:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 var raf = requestAnimationFrame || setTimeout;
 var nextFrame = function(fn) { raf(function() { raf(fn); }); };
 
@@ -1582,7 +1249,7 @@ function applyRemoveStyle(vnode, rm) {
 
 module.exports = {create: updateStyle, update: updateStyle, destroy: applyDestroyStyle, remove: applyRemoveStyle};
 
-},{}],22:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 // jshint newcap: false
 /* global require, module, document, Element */
 'use strict';
@@ -1821,14 +1488,14 @@ function init(modules) {
 
 module.exports = {init: init};
 
-},{"./is":17,"./vnode":23}],23:[function(require,module,exports){
+},{"./is":16,"./vnode":22}],22:[function(require,module,exports){
 module.exports = function(sel, data, children, text, elm) {
   var key = data === undefined ? undefined : data.key;
   return {sel: sel, data: data, children: children,
           text: text, elm: elm, key: key};
 };
 
-},{}],24:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1844,7 +1511,8 @@ var _isomorphicFetch2 = _interopRequireDefault(_isomorphicFetch);
 // var apiHost = 'http://musicfeed.rubyforce.co/api/client/',
 //     apiAuth = 'email=alex.korsak%40gmail.com&authentication_token=alex.korsak%40gmail.com';
 
-var apiHost = '/fake-api/';
+// temp
+var apiHost = 'http://192.168.1.70:5551/fake-api/';
 
 exports['default'] = {
     // feed()  { get('timelines.json?my=false' , arguments) },
@@ -1884,7 +1552,7 @@ function done(err, data, cb) {
 }
 module.exports = exports['default'];
 
-},{"isomorphic-fetch":3}],25:[function(require,module,exports){
+},{"isomorphic-fetch":2}],24:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1892,6 +1560,8 @@ Object.defineProperty(exports, '__esModule', {
 });
 exports.fetchFeed = fetchFeed;
 exports.scrollFeed = scrollFeed;
+exports.openActions = openActions;
+exports.closeActions = closeActions;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
@@ -1946,7 +1616,41 @@ function scrollFeed(start) {
     };
 }
 
-},{"../../Api":24,"../types":28}],26:[function(require,module,exports){
+function openActions(id) {
+    return function (dispatch, getState) {
+        return shouldOpenActions(getState(), id) ? dispatch(doOpenActions(id)) : null;
+    };
+}
+
+function shouldOpenActions(state, id) {
+    return state.feed.openActionIds.indexOf(id) < 0;
+}
+
+function doOpenActions(id) {
+    return {
+        type: _types.OPEN_FEED_ITEM_ACTIONS,
+        id: id
+    };
+}
+
+function closeActions(id) {
+    return function (dispatch, getState) {
+        return shouldCloseActions(getState(), id) ? dispatch(doCloseActions(id)) : null;
+    };
+}
+
+function shouldCloseActions(state, id) {
+    return state.feed.openActionIds.indexOf(id) > -1;
+}
+
+function doCloseActions(id) {
+    return {
+        type: _types.CLOSE_FEED_ITEM_ACTIONS,
+        id: id
+    };
+}
+
+},{"../../Api":23,"../types":27}],25:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -2001,7 +1705,7 @@ function fail(err) {
     };
 }
 
-},{"../../Api":24,"../types":28}],27:[function(require,module,exports){
+},{"../../Api":23,"../types":27}],26:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -2024,7 +1728,7 @@ function setView(viewName) {
     };
 }
 
-},{"../types":28,"isomorphic-fetch":3}],28:[function(require,module,exports){
+},{"../types":27,"isomorphic-fetch":2}],27:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -2036,6 +1740,8 @@ var SET_VIEW = 'SET_VIEW',
     FETCH_FEED_ERR = 'FETCH_FEED_ERR',
     SCROLL_FEED_START = 'SCROLL_FEED_START',
     SCROLL_FEED_STOP = 'SCROLL_FEED_STOP',
+    OPEN_FEED_ITEM_ACTIONS = 'OPEN_FEED_ITEM_ACTIONS',
+    CLOSE_FEED_ITEM_ACTIONS = 'CLOSE_FEED_ITEM_ACTIONS',
     FETCH_ME_REQ = 'FETCH_ME_REQ',
     FETCH_ME_RES = 'FETCH_ME_RES',
     FETCH_ME_ERR = 'FETCH_ME_ERR';
@@ -2045,11 +1751,13 @@ exports.FETCH_FEED_RES = FETCH_FEED_RES;
 exports.FETCH_FEED_ERR = FETCH_FEED_ERR;
 exports.SCROLL_FEED_START = SCROLL_FEED_START;
 exports.SCROLL_FEED_STOP = SCROLL_FEED_STOP;
+exports.OPEN_FEED_ITEM_ACTIONS = OPEN_FEED_ITEM_ACTIONS;
+exports.CLOSE_FEED_ITEM_ACTIONS = CLOSE_FEED_ITEM_ACTIONS;
 exports.FETCH_ME_REQ = FETCH_ME_REQ;
 exports.FETCH_ME_RES = FETCH_ME_RES;
 exports.FETCH_ME_ERR = FETCH_ME_ERR;
 
-},{}],29:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /** @jsx html */
 'use strict';
 
@@ -2089,15 +1797,13 @@ exports['default'] = {
 };
 module.exports = exports['default'];
 
-},{"./Tabbar":34,"./ViewsContainer":35,"snabbdom-jsx":16}],30:[function(require,module,exports){
+},{"./Tabbar":33,"./ViewsContainer":34,"snabbdom-jsx":15}],29:[function(require,module,exports){
 /** @jsx html */
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
     value: true
 });
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
@@ -2107,9 +1813,9 @@ var _objectAssign = require('object-assign');
 
 var _objectAssign2 = _interopRequireDefault(_objectAssign);
 
-var _humanFormat = require('human-format');
+var _texts = require('../texts');
 
-var _humanFormat2 = _interopRequireDefault(_humanFormat);
+var _texts2 = _interopRequireDefault(_texts);
 
 var _actionsCreatorsFeed = require('../actions/creators/feed');
 
@@ -2119,99 +1825,53 @@ var _Navbar2 = _interopRequireDefault(_Navbar);
 
 exports['default'] = {
     onInsert: function onInsert(vnode) {
-        this.feed = vnode;
         setTimeout(function () {
             return window.store.dispatch((0, _actionsCreatorsFeed.fetchFeed)());
         });
     },
     onScrollableInsert: function onScrollableInsert(vnode) {
-        this.ul = vnode.children[0];
-        this.feedWidth();
-        window.addEventListener('resize', this.feedWidth.bind(this));
-        // vnode.elm.addEventListener('scroll', this.onScroll.bind(this), true);
-        vnode.elm.addEventListener('scroll', this.stackItems.bind(this), true);
+        vnode.elm.addEventListener('scroll', this.onScroll.bind(this), true);
     },
-    /*onScroll(evt) {
-        this.stackItems(evt);
-         if (!this.scrolling)
-            this.scrollStart();
-         clearTimeout(this.scrollTimer);
+    onScroll: function onScroll(evt) {
+        if (!this.scrolling) this.scrollStart();
+
+        clearTimeout(this.scrollTimer);
         this.scrollTimer = setTimeout(this.scrollStop.bind(this), 100);
     },
-    scrollStart() {
+    scrollStart: function scrollStart() {
         this.scrolling = true;
-        window.store.dispatch(scrollFeed(true));
+        window.store.dispatch((0, _actionsCreatorsFeed.scrollFeed)(true));
     },
-    scrollStop() {
+    scrollStop: function scrollStop() {
         this.scrolling = false;
-        window.store.dispatch(scrollFeed(false));
-    },*/
-    feedWidth: function feedWidth() {
-        var _this = this;
-
-        requestAnimationFrame(function () {
-            return _this.width = _this.ul.elm.offsetWidth;
-        });
-    },
-    stackItems: function stackItems(evt) {
-        var _this2 = this;
-
-        requestAnimationFrame(function () {
-            var stackIdx = Math.floor(evt.target.scrollTop / _this2.width);
-
-            if (stackIdx != _this2.stackIdx) _this2.stackItem(stackIdx);
-        });
-    },
-    stackItem: function stackItem(stackIdx) {
-        this.stackIdx = stackIdx;
-
-        var stackItem = this.ul.elm.children[this.stackIdx],
-            nextItem = this.ul.elm.children[this.stackIdx + 1],
-            afterNextItem = this.ul.elm.children[this.stackIdx + 2];
-
-        if (stackItem) {
-            stackItem.classList.add('hidden');
-
-            var stackClone = stackItem.cloneNode(true);
-            stackClone.setAttribute('id', 'stacked');
-
-            this.feed.elm.appendChild(stackClone);
-
-            if (this.stackClone) this.feed.elm.removeChild(this.stackClone);
-
-            this.stackClone = stackClone;
-        }
-
-        if (nextItem) {
-            nextItem.classList.remove('hidden');
-            nextItem.classList.add('shadow');
-        }
-
-        if (afterNextItem) afterNextItem.classList.remove('shadow');
+        window.store.dispatch((0, _actionsCreatorsFeed.scrollFeed)(false));
     },
     onScrollableDestroy: function onScrollableDestroy(vnode) {
         vnode.elm.removeEventListener('scroll', this.onScroll);
     },
-    /*onWebkitTransitionEnd(evt) {
-        //  fix for webkit issue: scrolling freezes
-        //  after transition/animation
-        evt.currentTarget.style.overflowY = 'hidden';
-        setTimeout(() => evt.currentTarget.style.overflowY = 'auto');
-    },*/
+    openActions: function openActions(id) {
+        window.store.dispatch((0, _actionsCreatorsFeed.openActions)(id));
+    },
+    closeActions: function closeActions(id) {
+        window.store.dispatch((0, _actionsCreatorsFeed.closeActions)(id));
+    },
     view: function view(props) {
+        var _this = this;
+
         var state = window.store.getState();
 
         (0, _objectAssign2['default'])(props, {
             id: 'feed',
             classNames: 'view',
             'class': {
+                empty: !state.feed.tracks.length,
                 loading: state.feed.isFetching
             },
-            // 'on-webkitTransitionEnd': this.onWebkitTransitionEnd,
             'hook-insert': this.onInsert.bind(this)
         });
 
         var scrollableProps = {
+            id: 'scrollable',
             'hook-insert': this.onScrollableInsert.bind(this),
             'hook-destroy': this.onScrollableDestroy.bind(this)
         };
@@ -2222,57 +1882,123 @@ exports['default'] = {
             (0, _snabbdomJsx.html)(_Navbar2['default'], { view: 'feed' }),
             (0, _snabbdomJsx.html)(
                 'div',
-                _extends({ classNames: 'scrollable' }, scrollableProps),
+                scrollableProps,
                 (0, _snabbdomJsx.html)(
                     'ul',
                     null,
-                    state.feed.tracks.map(function (track, idx) {
+                    state.feed.tracks.map(function (track) {
                         return (0, _snabbdomJsx.html)(
                             'li',
-                            { classNames: 'entry',
-                                'class-loved': track.is_liked,
+                            {
+                                classNames: 'track',
+                                'class': {
+                                    loved: track.is_liked,
+                                    'show-actions': state.feed.openActionIds.indexOf(track.id) > -1,
+                                    'hide-actions': state.feed.closedActionIds.indexOf(track.id) > -1
+                                },
+                                // 'data-cover': track.picture,
                                 style: {
                                     backgroundImage: 'url(' + track.picture + ')'
-                                } },
+                                }
+                            },
                             (0, _snabbdomJsx.html)(
                                 'div',
                                 null,
-                                (0, _snabbdomJsx.html)('i', { classNames: 'mf mf-play' }),
                                 (0, _snabbdomJsx.html)(
-                                    'h3',
-                                    { classNames: 'title' },
-                                    track.name
-                                ),
-                                (0, _snabbdomJsx.html)(
-                                    'h6',
-                                    { classNames: 'author',
-                                        'class-verified': track.is_verified_user },
-                                    (0, _snabbdomJsx.html)('u', { style: {
-                                            backgroundImage: 'url(' + track.author_picture + ')'
-                                        } }),
-                                    track.author_name
-                                ),
-                                (0, _snabbdomJsx.html)(
-                                    'ul',
-                                    { classNames: 'actions' },
+                                    'div',
+                                    { className: 'meta' },
                                     (0, _snabbdomJsx.html)(
-                                        'li',
-                                        { classNames: 'ellipsis' },
-                                        (0, _snabbdomJsx.html)('i', { classNames: 'mf mf-ellipsis' })
+                                        'h3',
+                                        { classNames: 'title' },
+                                        (0, _snabbdomJsx.html)(
+                                            'span',
+                                            null,
+                                            track.name
+                                        )
                                     ),
                                     (0, _snabbdomJsx.html)(
-                                        'li',
-                                        { classNames: 'heart' },
+                                        'h6',
+                                        { classNames: 'author', 'class-verified': track.is_verified_user },
+                                        (0, _snabbdomJsx.html)('u', { style: {
+                                                backgroundImage: 'url(' + track.author_picture + ')'
+                                            } }),
+                                        track.author_name
+                                    ),
+                                    (0, _snabbdomJsx.html)(
+                                        'ul',
+                                        { classNames: 'more' },
                                         (0, _snabbdomJsx.html)(
-                                            'b',
-                                            null,
-                                            (0, _humanFormat2['default'])(track.likes_count, {
-                                                decimals: 1
-                                            })
+                                            'li',
+                                            { classNames: 'ellipsis',
+                                                'on-click': _this.openActions.bind(_this, track.id) },
+                                            (0, _snabbdomJsx.html)('i', { classNames: 'mf mf-ellipsis-2pt' })
                                         ),
-                                        (0, _snabbdomJsx.html)('i', { classNames: 'mf mf-heart' })
+                                        (0, _snabbdomJsx.html)(
+                                            'li',
+                                            { classNames: 'close',
+                                                'on-click': _this.closeActions.bind(_this, track.id) },
+                                            (0, _snabbdomJsx.html)('i', { classNames: 'mf mf-x' })
+                                        )
                                     )
-                                )
+                                ),
+                                (0, _snabbdomJsx.html)(
+                                    'div',
+                                    { classNames: 'actions' },
+                                    (0, _snabbdomJsx.html)(
+                                        'ul',
+                                        null,
+                                        (0, _snabbdomJsx.html)(
+                                            'li',
+                                            { classNames: 'repost' },
+                                            (0, _snabbdomJsx.html)(
+                                                'span',
+                                                null,
+                                                (0, _snabbdomJsx.html)('i', { classNames: 'mf mf-repost' }),
+                                                (0, _snabbdomJsx.html)(
+                                                    'u',
+                                                    null,
+                                                    _texts2['default'].track.repost
+                                                )
+                                            )
+                                        ),
+                                        (0, _snabbdomJsx.html)(
+                                            'li',
+                                            { classNames: 'add-to-playlist' },
+                                            (0, _snabbdomJsx.html)(
+                                                'span',
+                                                null,
+                                                (0, _snabbdomJsx.html)('i', { classNames: 'mf mf-add-to-list' }),
+                                                (0, _snabbdomJsx.html)(
+                                                    'u',
+                                                    null,
+                                                    _texts2['default'].track.addToPlaylist
+                                                )
+                                            )
+                                        ),
+                                        (0, _snabbdomJsx.html)(
+                                            'li',
+                                            { classNames: 'share' },
+                                            (0, _snabbdomJsx.html)(
+                                                'span',
+                                                null,
+                                                (0, _snabbdomJsx.html)('i', { classNames: 'mf mf-upload' }),
+                                                (0, _snabbdomJsx.html)(
+                                                    'u',
+                                                    null,
+                                                    _texts2['default'].track.share
+                                                )
+                                            )
+                                        )
+                                    )
+                                ),
+                                (0, _snabbdomJsx.html)(
+                                    'div',
+                                    { classNames: 'actions-blurred-backdrop' },
+                                    (0, _snabbdomJsx.html)('div', { classNames: 'overlay' }),
+                                    (0, _snabbdomJsx.html)('div', { classNames: 'backdrop', style: { backgroundImage: 'url(' + track.picture + ')' } })
+                                ),
+                                (0, _snabbdomJsx.html)('i', { classNames: 'mf mf-play' }),
+                                (0, _snabbdomJsx.html)('div', { classNames: 'overlay' })
                             )
                         );
                     })
@@ -2283,7 +2009,7 @@ exports['default'] = {
 };
 module.exports = exports['default'];
 
-},{"../actions/creators/feed":25,"./Navbar":32,"human-format":2,"object-assign":5,"snabbdom-jsx":16}],31:[function(require,module,exports){
+},{"../actions/creators/feed":24,"../texts":42,"./Navbar":31,"object-assign":4,"snabbdom-jsx":15}],30:[function(require,module,exports){
 /** @jsx html */
 'use strict';
 
@@ -2301,6 +2027,10 @@ var _objectAssign2 = _interopRequireDefault(_objectAssign);
 
 var _actionsCreatorsMe = require('../actions/creators/me');
 
+var _texts = require('../texts');
+
+var _texts2 = _interopRequireDefault(_texts);
+
 var _Navbar = require('./Navbar');
 
 var _Navbar2 = _interopRequireDefault(_Navbar);
@@ -2316,7 +2046,7 @@ exports['default'] = {
 
         if (url.indexOf('facebook.com') < 0) return url;
 
-        var d = size == 'profile' ? [160, 160] : [750, 750 * .6];
+        var d = size == 'profile' ? [160, 160] : [1000, 600]; //[750/3*4, 750/3*4*.6];
 
         return url.replace(/picture(\?type=[a-z]*)$/, 'picture?width=' + d[0] + '&height=' + d[1]);
     },
@@ -2336,6 +2066,7 @@ exports['default'] = {
             id: 'me',
             classNames: 'view',
             'class': {
+                empty: !state.me.data,
                 loading: state.me.isFetching
             },
             'hook-prepatch': this.onPrepatch.bind(this, state)
@@ -2344,7 +2075,21 @@ exports['default'] = {
         if (!state.me.data) return (0, _snabbdomJsx.html)(
             'div',
             props,
-            (0, _snabbdomJsx.html)(_Navbar2['default'], { view: 'me' })
+            (0, _snabbdomJsx.html)(_Navbar2['default'], { view: 'me' }),
+            (0, _snabbdomJsx.html)(
+                'div',
+                { classNames: 'head' },
+                (0, _snabbdomJsx.html)(
+                    'h3',
+                    { classNames: 'name' },
+                    _texts2['default'].me.title
+                )
+            ),
+            (0, _snabbdomJsx.html)(
+                'div',
+                { classNames: 'sections-container' },
+                (0, _snabbdomJsx.html)('div', null)
+            )
         );
 
         var data = state.me.data,
@@ -2430,14 +2175,18 @@ exports['default'] = {
             (0, _snabbdomJsx.html)(
                 'div',
                 { classNames: 'sections-container' },
-                (0, _snabbdomJsx.html)('div', { classNames: 'playlists scrollable' })
+                (0, _snabbdomJsx.html)(
+                    'div',
+                    null,
+                    (0, _snabbdomJsx.html)('div', { classNames: 'playlists scrollable' })
+                )
             )
         );
     }
 };
 module.exports = exports['default'];
 
-},{"../actions/creators/me":26,"./Navbar":32,"object-assign":5,"snabbdom-jsx":16}],32:[function(require,module,exports){
+},{"../actions/creators/me":25,"../texts":42,"./Navbar":31,"object-assign":4,"snabbdom-jsx":15}],31:[function(require,module,exports){
 /** @jsx html */
 'use strict';
 
@@ -2465,8 +2214,9 @@ exports['default'] = {
             'nav',
             {
                 id: 'navbar',
-                classNames: 'feed' /*
-                                   class-hide={state.feed.isScrolling}*/ },
+                classNames: 'feed',
+                'class-invisible': !state.feed.tracks.length,
+                'class-hide': state.feed.isScrolling },
             (0, _snabbdomJsx.html)(
                 'ul',
                 null,
@@ -2493,7 +2243,10 @@ exports['default'] = {
 
         return (0, _snabbdomJsx.html)(
             'nav',
-            { id: 'navbar', classNames: 'me' },
+            {
+                id: 'navbar',
+                classNames: 'me',
+                'class-invisible': !state.me.data },
             (0, _snabbdomJsx.html)(
                 'ul',
                 null,
@@ -2525,7 +2278,7 @@ exports['default'] = {
 };
 module.exports = exports['default'];
 
-},{"../texts":43,"snabbdom-jsx":16}],33:[function(require,module,exports){
+},{"../texts":42,"snabbdom-jsx":15}],32:[function(require,module,exports){
 /** @jsx html */
 'use strict';
 
@@ -2559,7 +2312,7 @@ exports['default'] = {
 };
 module.exports = exports['default'];
 
-},{"./Navbar":32,"object-assign":5,"snabbdom-jsx":16}],34:[function(require,module,exports){
+},{"./Navbar":31,"object-assign":4,"snabbdom-jsx":15}],33:[function(require,module,exports){
 /** @jsx html */
 'use strict';
 
@@ -2591,8 +2344,8 @@ exports['default'] = {
         return (0, _snabbdomJsx.html)(
             'nav',
             {
-                id: 'tabbar' /*
-                             class-hide={state.feed.isScrolling}*/ },
+                id: 'tabbar',
+                'class-hide': state.feed.isScrolling },
             (0, _snabbdomJsx.html)(
                 'ul',
                 null,
@@ -2644,7 +2397,7 @@ exports['default'] = {
 };
 module.exports = exports['default'];
 
-},{"../actions/creators/view":27,"../texts":43,"snabbdom-jsx":16}],35:[function(require,module,exports){
+},{"../actions/creators/view":26,"../texts":42,"snabbdom-jsx":15}],34:[function(require,module,exports){
 /** @jsx html */
 'use strict';
 
@@ -2677,6 +2430,12 @@ var _Me = require('./Me');
 var _Me2 = _interopRequireDefault(_Me);
 
 exports['default'] = {
+    onInsert: function onInsert() {
+        if (typeof StatusBar !== 'undefined') StatusBar.show();
+    },
+    onPostpatch: function onPostpatch(state) {
+        if (typeof StatusBar !== 'undefined') StatusBar[state.view.current == 'me' ? 'styleLightContent' : 'styleDefault']();
+    },
     getViewProps: function getViewProps(state, view) {
         return (0, _objectAssign2['default'])({
             style: { zIndex: 0 }
@@ -2687,16 +2446,22 @@ exports['default'] = {
         });
     },
     view: function view(props) {
-        var state = window.store.getState(),
-            viewClass = {
-            feed: state.view.current === 'feed',
-            search: state.view.current === 'search',
-            me: state.view.current === 'me'
-        };
+        var state = window.store.getState();
+
+        (0, _objectAssign2['default'])(props, {
+            id: 'views-container',
+            'class': {
+                feed: state.view.current === 'feed',
+                search: state.view.current === 'search',
+                me: state.view.current === 'me'
+            },
+            'hook-insert': this.onInsert.bind(this),
+            'hook-postpatch': this.onPostpatch.bind(this, state)
+        });
 
         return (0, _snabbdomJsx.html)(
             'div',
-            { id: 'views-container', 'class': viewClass },
+            props,
             (0, _snabbdomJsx.html)(_Feed2['default'], this.getViewProps(state, 'feed')),
             (0, _snabbdomJsx.html)(_Search2['default'], this.getViewProps(state, 'search')),
             (0, _snabbdomJsx.html)(_Me2['default'], this.getViewProps(state, 'me'))
@@ -2705,7 +2470,7 @@ exports['default'] = {
 };
 module.exports = exports['default'];
 
-},{"../texts":43,"./Feed":30,"./Me":31,"./Search":33,"object-assign":5,"snabbdom-jsx":16}],36:[function(require,module,exports){
+},{"../texts":42,"./Feed":29,"./Me":30,"./Search":32,"object-assign":4,"snabbdom-jsx":15}],35:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -2759,7 +2524,7 @@ function configurePatcher(placeholder, store) {
 
 module.exports = exports['default'];
 
-},{"./components/App":29,"snabbdom":22,"snabbdom/modules/class":18,"snabbdom/modules/eventlisteners":19,"snabbdom/modules/props":20,"snabbdom/modules/style":21}],37:[function(require,module,exports){
+},{"./components/App":28,"snabbdom":21,"snabbdom/modules/class":17,"snabbdom/modules/eventlisteners":18,"snabbdom/modules/props":19,"snabbdom/modules/style":20}],36:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -2791,7 +2556,7 @@ function configureStore(initialState) {
 
 module.exports = exports['default'];
 
-},{"./reducers":40,"redux":8,"redux-thunk":6}],38:[function(require,module,exports){
+},{"./reducers":39,"redux":7,"redux-thunk":5}],37:[function(require,module,exports){
 'use strict';
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -2820,11 +2585,19 @@ function init() {
 
 document.addEventListener('deviceready', init, false);
 
-if (navigator.userAgent.match(/Macintosh/i)) window.onload = function () {
+// navigator.userAgent in OS X Chrome:
+//  Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.71 Safari/537.36
+// navigator.userAgent in cordova-bundled app:
+//  Mozilla/5.0 (iPhone; CPU iPhone OS 9_0_2 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Mobile/13A452
+// navigator.userAgent in iOS Safari:
+//  Mozilla/5.0 (iPhone; CPU iPhone OS 9_0_2 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13A452 Safari/601.1
+
+//  fake it in browser
+if (navigator.userAgent.match(/(Chrome|Safari)/i)) window.onload = function () {
     return document.dispatchEvent(new CustomEvent('deviceready'));
 };else (0, _utils.loadScript)('cordova.js');
 
-},{"./configurePatcher":36,"./configureStore":37,"./utils":44}],39:[function(require,module,exports){
+},{"./configurePatcher":35,"./configureStore":36,"./utils":43}],38:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -2846,7 +2619,9 @@ function feed(feed, action) {
         tracks: [],
         fetchError: null,
         updatedAt: null,
-        isScrolling: false
+        isScrolling: false,
+        openActionIds: [],
+        closedActionIds: []
     };
 
     switch (action.type) {
@@ -2871,6 +2646,29 @@ function feed(feed, action) {
             return (0, _objectAssign2['default'])({}, feed, {
                 isScrolling: action.type == _actionsTypes.SCROLL_FEED_START
             });
+        case _actionsTypes.OPEN_FEED_ITEM_ACTIONS:
+            var ooCopy = feed.openActionIds.slice(),
+                ocCopy = feed.closedActionIds.slice(),
+                ocIdx = feed.closedActionIds.indexOf(action.id);
+
+            ooCopy.push(action.id);
+            if (ocIdx > -1) ocCopy.splice(ocIdx, 1);
+
+            return (0, _objectAssign2['default'])({}, feed, {
+                openActionIds: ooCopy,
+                closedActionIds: ocCopy
+            });
+        case _actionsTypes.CLOSE_FEED_ITEM_ACTIONS:
+            var coCopy = feed.openActionIds.slice(),
+                ccCopy = feed.closedActionIds.slice();
+
+            coCopy.splice(feed.openActionIds.indexOf(action.id), 1);
+            ccCopy.push(action.id);
+
+            return (0, _objectAssign2['default'])({}, feed, {
+                openActionIds: coCopy,
+                closedActionIds: ccCopy
+            });
         default:
             return feed;
     }
@@ -2878,7 +2676,7 @@ function feed(feed, action) {
 
 module.exports = exports['default'];
 
-},{"../actions/types":28,"object-assign":5}],40:[function(require,module,exports){
+},{"../actions/types":27,"object-assign":4}],39:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -2917,7 +2715,7 @@ export default function Reducers(state, action) {
 }*/
 module.exports = exports['default'];
 
-},{"./feed":39,"./me":41,"./view":42,"redux":8}],41:[function(require,module,exports){
+},{"./feed":38,"./me":40,"./view":41,"redux":7}],40:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -2965,7 +2763,7 @@ function me(me, action) {
 
 module.exports = exports['default'];
 
-},{"../actions/types":28,"object-assign":5}],42:[function(require,module,exports){
+},{"../actions/types":27,"object-assign":4}],41:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -3000,7 +2798,7 @@ function view(view, action) {
 
 module.exports = exports['default'];
 
-},{"../actions/types":28,"object-assign":5}],43:[function(require,module,exports){
+},{"../actions/types":27,"object-assign":4}],42:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -3016,11 +2814,19 @@ exports['default'] = {
 		feed: 'Feed',
 		search: 'Search',
 		me: 'My Profile'
+	},
+	me: {
+		title: 'My Profile'
+	},
+	track: {
+		repost: 'Repost',
+		addToPlaylist: 'Add to playlist',
+		share: 'Share'
 	}
 };
 module.exports = exports['default'];
 
-},{}],44:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -3322,7 +3128,7 @@ function navInternal(evt) {
 
 }).call(this,require('_process'))
 
-},{"_process":1}]},{},[38])
+},{"_process":1}]},{},[37])
 
 
 //# sourceMappingURL=bundle.js.map

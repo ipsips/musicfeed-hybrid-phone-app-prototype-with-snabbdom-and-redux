@@ -10,9 +10,10 @@ app.get('/', function renderFrontPage(req, res) {
 
 app.get('/fake-api/:endpoint', function renderFrontPage(req, res) {
 	function send() {
+		res.header('Access-Control-Allow-Origin', '*');
 	    res.sendFile(__dirname+'/fake-api/'+req.params.endpoint);
 	}
-	setTimeout(send, 3000);
+	setTimeout(send, 1500);
 });
 
 //  All other undefined routes should return a 404
