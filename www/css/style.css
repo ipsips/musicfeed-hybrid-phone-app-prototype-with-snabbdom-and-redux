@@ -1182,7 +1182,7 @@ body {
 }
 @keyframes slideUpAction {
   0% {
-    transform: translateY(200px);
+    transform: translateY(500px);
   }
   100% {
     transform: translateY(0);
@@ -1193,7 +1193,7 @@ body {
     transform: translateY(0);
   }
   100% {
-    transform: translateY(200px);
+    transform: translateY(500px);
   }
 }
 @media (-webkit-min-device-pixel-ratio: 1.5), (min-device-pixel-ratio: 1.5), (min-resolution: 144dpi), (min-resolution: 1.5dppx) {

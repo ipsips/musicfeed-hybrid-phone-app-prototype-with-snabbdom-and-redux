@@ -1512,7 +1512,7 @@ var _isomorphicFetch2 = _interopRequireDefault(_isomorphicFetch);
 //     apiAuth = 'email=alex.korsak%40gmail.com&authentication_token=alex.korsak%40gmail.com';
 
 // temp
-var apiHost = 'http://192.168.1.70:5551/fake-api/';
+var apiHost = /*'http://192.168.1.70:5551'+*/'/fake-api/';
 
 exports['default'] = {
     // feed()  { get('timelines.json?my=false' , arguments) },
