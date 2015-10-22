@@ -2145,6 +2145,15 @@ exports['default'] = {
                     null,
                     (0, _snabbdomJsx.html)(
                         'li',
+                        { 'class-active': true },
+                        (0, _snabbdomJsx.html)(
+                            'a',
+                            { href: '#', 'on-click': this.onClickMenu.bind(this, 'activity') },
+                            'Activity'
+                        )
+                    ),
+                    (0, _snabbdomJsx.html)(
+                        'li',
                         null,
                         (0, _snabbdomJsx.html)(
                             'a',
@@ -2157,17 +2166,8 @@ exports['default'] = {
                         null,
                         (0, _snabbdomJsx.html)(
                             'a',
-                            { href: '#', 'on-click': this.onClickMenu.bind(this, 'loved') },
-                            'Loved'
-                        )
-                    ),
-                    (0, _snabbdomJsx.html)(
-                        'li',
-                        null,
-                        (0, _snabbdomJsx.html)(
-                            'a',
-                            { href: '#', 'on-click': this.onClickMenu.bind(this, 'history') },
-                            'History'
+                            { href: '#', 'on-click': this.onClickMenu.bind(this, 'posts') },
+                            'Posts'
                         )
                     )
                 )
@@ -2255,20 +2255,14 @@ exports['default'] = {
                     null,
                     (0, _snabbdomJsx.html)(
                         'a',
-                        { href: '#', 'on-click': this.addTrack },
-                        (0, _snabbdomJsx.html)('i', { className: 'mf mf-bell' })
+                        { href: '#', 'on-click': function (evt) {
+                                return evt.preventDefault();
+                            } },
+                        (0, _snabbdomJsx.html)('i', { className: 'mf mf-gear' })
                     )
                 ),
                 (0, _snabbdomJsx.html)('li', null),
-                (0, _snabbdomJsx.html)(
-                    'li',
-                    null,
-                    (0, _snabbdomJsx.html)(
-                        'a',
-                        { href: '#', 'on-click': this.addTrack },
-                        (0, _snabbdomJsx.html)('i', { className: 'mf mf-gear' })
-                    )
-                )
+                (0, _snabbdomJsx.html)('li', null)
             )
         );
     },

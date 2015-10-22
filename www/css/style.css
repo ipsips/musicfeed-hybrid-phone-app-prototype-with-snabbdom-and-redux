@@ -636,15 +636,15 @@ body {
   -moz-box-sizing: content-box;
   box-sizing: content-box;
   padding-top: 20px;
-  /*&:after {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 100%;
-        width: 100%;
-        height: 1px;
-        background-color: @navbarEdgeColor;
-    }*/
+}
+#navbar:after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 100%;
+  width: 100%;
+  height: 1px;
+  background-color: rgba(0, 0, 0, 0.15);
 }
 #navbar li {
   float: left;
@@ -694,20 +694,15 @@ body {
 #navbar.invisible li:nth-child(3) {
   visibility: hidden;
 }
-/*@media (min--moz-device-pixel-ratio: 1.5),
-       (-o-min-device-pixel-ratio: 3/2),
-       (-webkit-min-device-pixel-ratio: 1.5),
-       (min-device-pixel-ratio: 1.5),
-       (min-resolution: 144dpi),
-       (min-resolution: 1.5dppx) {
-    #navbar:after {
-        background-color: transparent;
-        background-image: linear-gradient(180deg, @navbarEdgeColor, @navbarEdgeColor 50%, transparent 50%);
-        background-size: 100% 1px;
-        background-repeat: no-repeat;
-        background-position: top;
-    }
-}*/
+@media (min--moz-device-pixel-ratio: 1.5), (-o-min-device-pixel-ratio: 3/2), (-webkit-min-device-pixel-ratio: 1.5), (min-device-pixel-ratio: 1.5), (min-resolution: 144dpi), (min-resolution: 1.5dppx) {
+  #navbar:after {
+    background-color: transparent;
+    background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15) 50%, transparent 50%);
+    background-size: 100% 1px;
+    background-repeat: no-repeat;
+    background-position: top;
+  }
+}
 #tabbar {
   position: absolute;
   z-index: 10;
@@ -1330,6 +1325,10 @@ body {
   text-align: center;
   line-height: 44px;
 }
+#me .menu li.active a,
+#profile .menu li.active a {
+  color: #201E26;
+}
 #me .menu a,
 #profile .menu a {
   text-decoration: none;
@@ -1337,8 +1336,8 @@ body {
 }
 #me .menu a:hover,
 #profile .menu a:hover,
-#me .menu a.active,
-#profile .menu a.active {
+#me .menu a:active,
+#profile .menu a:active {
   color: #201E26;
 }
 #me .sections-container,
