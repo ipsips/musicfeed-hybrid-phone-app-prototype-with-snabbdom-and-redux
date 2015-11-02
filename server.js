@@ -1,19 +1,30 @@
 var express = require('express'),
+    // ejs = require('ejs'),
     app = module.exports = express(),
     port = process.argv[2] || 5551;
 
-app.use(express.static(__dirname+'/www'));
+// app.set('view engine', 'html');
+// app.engine('html', ejs.renderFile);
 
-app.get('/', function renderFrontPage(req, res) {
-    res.sendFile(__dirname+'/www/index.html');
+app.use(function allowOrigin(req, res, next) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    next();
 });
 
-app.get('/fake-api/:endpoint', function renderFrontPage(req, res) {
-	function send() {
+app.use(express.static(__dirname+'/www'));
+
+app.get('/fake-api/:endpoint', function (req, res) {
+	setTimeout(function () {
 		res.header('Access-Control-Allow-Origin', '*');
 	    res.sendFile(__dirname+'/fake-api/'+req.params.endpoint);
-	}
-	setTimeout(send, 1500);
+	}, 1500);
+});
+
+app.get('/:phoneSize?', function (req, res) {
+	res.sendFile(__dirname+'/www/index.html');
+    // res.render(__dirname+'/www/index.html', {
+    // 	phoneSize: req.params.phoneSize
+    // });
 });
 
 //  All other undefined routes should return a 404
