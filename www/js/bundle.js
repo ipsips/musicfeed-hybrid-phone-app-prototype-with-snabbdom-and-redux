@@ -2460,6 +2460,9 @@ exports['default'] = {
             return _this.width = _this.player.elm.offsetWidth;
         });
     },
+    onPostPatch: function onPostPatch() {
+        if (this.audio && !this.audio.isPlaying && window.store.getState().player.isPlaying) this.audio.play();
+    },
     onInsertAudio: function onInsertAudio(vnode) {
         this.audio = vnode.elm;
         this.audioSource = new AudioSource(this.audio, 64);
@@ -2534,6 +2537,7 @@ exports['default'] = {
             {
                 id: 'player',
                 'hook-insert': this.onInsertPlayer.bind(this),
+                'hook-postpatch': this.onPostPatch.bind(this),
                 'class': {
                     show: p.isOpen,
                     hide: p.isClosed
