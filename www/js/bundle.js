@@ -1712,9 +1712,9 @@ Object.defineProperty(exports, '__esModule', {
     value: true
 });
 exports.playTrack = playTrack;
-exports.progress = progress;
+exports.pause = pause;
 exports.togglePlayer = togglePlayer;
-exports.setEq = setEq;
+exports.visualize = visualize;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
@@ -1762,23 +1762,23 @@ function pause() {
     };
 }
 
-function progress(progress) {
-    return {
-        type: _types.PLAYER_PROGRESS,
-        progress: progress
-    };
-}
-
 function togglePlayer() {
     return function (dispatch, getState) {
         return getState().player.isOpen ? dispatch({ type: _types.PLAYER_CLOSE }) : dispatch({ type: _types.PLAYER_OPEN });
     };
 }
 
-function setEq(data) {
+function visualize(_ref) {
+    var elapsed = _ref.elapsed;
+    var duration = _ref.duration;
+    var eq = _ref.eq;
+
     return {
-        type: _types.PLAYER_EQ,
-        data: data
+        type: _types.PLAYER_VISUALIZE,
+        progress: elapsed / duration,
+        elapsed: elapsed,
+        duration: duration,
+        eq: eq
     };
 }
 
@@ -1832,17 +1832,12 @@ var SET_VIEW = 'SET_VIEW',
     FETCH_ME_REQ = 'FETCH_ME_REQ',
     FETCH_ME_RES = 'FETCH_ME_RES',
     FETCH_ME_ERR = 'FETCH_ME_ERR',
-
-// PLAY_TRACK_REQ = 'PLAY_TRACK_REQ',
-// PLAY_TRACK_RES = 'PLAY_TRACK_RES',
-// PLAY_TRACK_ERR = 'PLAY_TRACK_ERR',
-PLAYER_START = 'PLAYER_START',
+    PLAYER_START = 'PLAYER_START',
     PLAYER_PAUSE = 'PLAYER_PAUSE',
     PLAYER_SET_TRACK = 'PLAYER_SET_TRACK',
-    PLAYER_PROGRESS = 'PLAYER_PROGRESS',
     PLAYER_OPEN = 'PLAYER_OPEN',
     PLAYER_CLOSE = 'PLAYER_CLOSE',
-    PLAYER_EQ = 'PLAYER_EQ';
+    PLAYER_VISUALIZE = 'PLAYER_VISUALIZE';
 exports.SET_VIEW = SET_VIEW;
 exports.FETCH_FEED_REQ = FETCH_FEED_REQ;
 exports.FETCH_FEED_RES = FETCH_FEED_RES;
@@ -1857,10 +1852,9 @@ exports.FETCH_ME_ERR = FETCH_ME_ERR;
 exports.PLAYER_START = PLAYER_START;
 exports.PLAYER_PAUSE = PLAYER_PAUSE;
 exports.PLAYER_SET_TRACK = PLAYER_SET_TRACK;
-exports.PLAYER_PROGRESS = PLAYER_PROGRESS;
 exports.PLAYER_OPEN = PLAYER_OPEN;
 exports.PLAYER_CLOSE = PLAYER_CLOSE;
-exports.PLAYER_EQ = PLAYER_EQ;
+exports.PLAYER_VISUALIZE = PLAYER_VISUALIZE;
 
 },{}],29:[function(require,module,exports){
 /** @jsx html */
@@ -1903,7 +1897,7 @@ exports['default'] = {
             navigator.userAgent.match(/(Chrome|Safari)/i) ? (0, _snabbdomJsx.html)(
                 'ul',
                 { classNames: 'statusbar',
-                    'class-white': state.view.current == 'me' },
+                    'class-white': state.view.current == 'me' || state.view.current == 'add-track' },
                 (0, _snabbdomJsx.html)('li', null),
                 (0, _snabbdomJsx.html)('li', null),
                 (0, _snabbdomJsx.html)('li', null)
@@ -1937,6 +1931,8 @@ var _texts = require('../texts');
 var _texts2 = _interopRequireDefault(_texts);
 
 var _utils = require('../utils');
+
+var _actionsCreatorsView = require('../actions/creators/view');
 
 var _actionsCreatorsFeed = require('../actions/creators/feed');
 
@@ -1983,6 +1979,7 @@ exports['default'] = {
     },
     openPlayer: function openPlayer() {
         window.store.dispatch((0, _actionsCreatorsPlayer.togglePlayer)());
+        window.store.dispatch((0, _actionsCreatorsView.setView)('player'));
     },
     view: function view(props) {
         var _this = this;
@@ -2119,7 +2116,7 @@ module.exports = exports['default'];
            <div classNames="backdrop" style={{backgroundImage: 'url('+track.picture+')'}}/>
         </div>*/
 
-},{"../actions/creators/feed":24,"../actions/creators/player":26,"../texts":45,"../utils":46,"./Navbar":32,"object-assign":4,"snabbdom-jsx":15}],31:[function(require,module,exports){
+},{"../actions/creators/feed":24,"../actions/creators/player":26,"../actions/creators/view":27,"../texts":45,"../utils":46,"./Navbar":32,"object-assign":4,"snabbdom-jsx":15}],31:[function(require,module,exports){
 /** @jsx html */
 'use strict';
 
@@ -2413,6 +2410,8 @@ var _texts2 = _interopRequireDefault(_texts);
 
 var _utils = require('../utils');
 
+var _actionsCreatorsView = require('../actions/creators/view');
+
 var _actionsCreatorsPlayer = require('../actions/creators/player');
 
 var _Navbar = require('./Navbar');
@@ -2425,7 +2424,7 @@ Object.defineProperty(HTMLMediaElement.prototype, 'isPlaying', {
     }
 });
 
-function AudioSource(audio, fftSize, arrayLength) {
+function AudioSource(audio, fftSize) {
     if (!window.AudioContext) return null;
 
     var _ = this,
@@ -2435,58 +2434,93 @@ function AudioSource(audio, fftSize, arrayLength) {
 
     _.analyser = audioCtx.createAnalyser();
     _.analyser.minDecibels = -90;
-    _.analyser.maxDecibels = -10;
+    _.analyser.maxDecibels = 30;
     _.analyser.smoothingTimeConstant = 0.4;
     _.analyser.fftSize = fftSize;
     source.connect(_.analyser);
     _.analyser.connect(audioCtx.destination);
-    _.streamData = new Uint8Array(arrayLength);
+    _.streamData = new Uint8Array(fftSize / 2);
 }
 
 exports['default'] = {
-    closePlayer: function closePlayer(evt) {
+    closePlayer: function closePlayer(state, evt) {
         evt.preventDefault();
         window.store.dispatch((0, _actionsCreatorsPlayer.togglePlayer)());
+        window.store.dispatch((0, _actionsCreatorsView.setView)(state.view.previous));
+    },
+    onInsertPlayer: function onInsertPlayer(vnode) {
+        this.player = vnode;
+        this.playerWidth();
+        window.addEventListener('resize', this.playerWidth.bind(this), true);
+    },
+    playerWidth: function playerWidth() {
+        var _this = this;
+
+        requestAnimationFrame(function () {
+            return _this.width = _this.player.elm.offsetWidth;
+        });
     },
     onInsertAudio: function onInsertAudio(vnode) {
         this.audio = vnode.elm;
-        this.audioSource = new AudioSource(this.audio, 32, 6);
+        this.audioSource = new AudioSource(this.audio, 64);
 
         this.audio.addEventListener('error', function (evt) {
             return console.log('audio error:', evt);
         }, true);
         this.audio.addEventListener('canplay', this.onCanplay.bind(this), true);
         this.audio.addEventListener('playing', this.onStartPlayback.bind(this), true);
-        // this.audio.addEventListener('pause', this.onPausePlayback.bind(this), true);
+        this.audio.addEventListener('pause', this.onPausePlayback.bind(this), true);
     },
     onCanplay: function onCanplay(evt) {
         if (!this.audio.isPlaying) this.audio.play();
     },
     onStartPlayback: function onStartPlayback() {
-        this.eq();
+        this.visualFeedback();
     },
     onPausePlayback: function onPausePlayback() {
-        window.store.dispatch((0, _actionsCreatorsPlayer.setEq)([.03, .03, .03, .03, .03, .03]));
+        window.store.dispatch((0, _actionsCreatorsPlayer.pause)());
     },
-    eq: function eq() {
+    visualFeedback: function visualFeedback() {
         if (!this.audioSource) return;
 
         var eqData = [],
-            i = undefined;
+            i = undefined,
+            j = 0;
 
         this.audioSource.analyser.getByteFrequencyData(this.audioSource.streamData);
 
-        for (i = 0; i < this.audioSource.streamData.length; i++) eqData.push(this.audioSource.streamData[i] / 255);
+        // collect freq data for first 12 channels out of 32
+        // (that is the lower end of the spectrum)
+        for (i = 0; i < 12; i++) {
+            var val = this.audioSource.streamData[i] / 255;
 
-        window.store.dispatch((0, _actionsCreatorsPlayer.setEq)(eqData));
+            // cahce the average of channel 1 and 2, 3 and 4, ...
+            // since we have 6 bars in the graphic eq we want
+            // the length of eqData to be 6
+            eqData[j] = typeof eqData[j] === 'undefined' ? val : (eqData[j] + val) / (i % 2 + 1);
 
-        if (this.audio.isPlaying) setTimeout(this.eq.bind(this), 20);
-        // requestAnimationFrame(this.eq.bind(this));
+            if (i != 0 && i % 2 == 0) j++;
+        }
+        // console.log('eqData:', eqData);
+
+        window.store.dispatch((0, _actionsCreatorsPlayer.visualize)({
+            eq: eqData,
+            elapsed: this.audio.currentTime,
+            duration: this.audio.duration
+        }));
+
+        if (this.audio.isPlaying) setTimeout(this.visualFeedback.bind(this), 40);
+        // requestAnimationFrame(this.visualFeedback.bind(this));
+    },
+    fmtTime: function fmtTime(secs) {
+        var f = Math.floor;
+        return secs >= 3600 ? f(secs / 3600) + ':' + f(secs % 3600 / 60).leadZero() + ':' + f(secs % 3600 % 60).leadZero() : f(secs / 60) + ':' + f(secs % 60).leadZero();
     },
     view: function view(props) {
         var state = window.store.getState(),
-            track = (0, _utils.getRef)(state, 'player.track'),
-            idx = (0, _utils.getRef)(state, 'player.idx'),
+            p = state.player,
+            track = p.track,
+            idx = p.idx,
             audioProps = (0, _objectAssign2['default'])({
             'hook-insert': this.onInsertAudio.bind(this)
         }, track && {
@@ -2497,23 +2531,48 @@ exports['default'] = {
 
         return (0, _snabbdomJsx.html)(
             'div',
-            { id: 'player',
-                'class-show': state.player.isOpen,
-                'class-hide': state.player.isClosed },
-            (0, _snabbdomJsx.html)(_Navbar2['default'], { view: 'player', closePlayer: this.closePlayer }),
+            {
+                id: 'player',
+                'hook-insert': this.onInsertPlayer.bind(this),
+                'class': {
+                    show: p.isOpen,
+                    hide: p.isClosed
+                } },
+            (0, _snabbdomJsx.html)(_Navbar2['default'], { view: 'player', closePlayer: this.closePlayer.bind(this, state) }),
             track ? (0, _snabbdomJsx.html)(
                 'div',
-                {
-                    'class': {
-                        loved: track.is_liked
-                    }
-                },
+                { 'class-loved': track.is_liked },
                 (0, _snabbdomJsx.html)(
                     'div',
                     { classNames: 'cover',
                         style: { backgroundImage: 'url(' + track.picture + ')' } },
                     (0, _snabbdomJsx.html)('div', { classNames: 'overlay' })
                 ),
+                (0, _snabbdomJsx.html)(
+                    'div',
+                    { classNames: 'progress' },
+                    (0, _snabbdomJsx.html)(
+                        'div',
+                        { classNames: 'bar' },
+                        (0, _snabbdomJsx.html)('b', { style: { transform: 'scaleX(' + p.progress + ')' } }),
+                        (0, _snabbdomJsx.html)('i', { style: { transform: 'translateX(' + p.progress * this.width + 'px)' } })
+                    )
+                ),
+                (0, _snabbdomJsx.html)(
+                    'div',
+                    { classNames: 'progress-times' },
+                    (0, _snabbdomJsx.html)(
+                        'time',
+                        { classNames: 'elapsed' },
+                        this.fmtTime(p.elapsed)
+                    ),
+                    (0, _snabbdomJsx.html)(
+                        'time',
+                        { classNames: 'duration' },
+                        this.fmtTime(p.duration)
+                    )
+                ),
+                (0, _snabbdomJsx.html)('div', { classNames: 'progress-bar-base' }),
                 (0, _snabbdomJsx.html)(
                     'div',
                     { classNames: 'meta' },
@@ -2527,16 +2586,16 @@ exports['default'] = {
                         )
                     )
                 ),
-                (0, _snabbdomJsx.html)('audio', audioProps)
+                (0, _snabbdomJsx.html)('audio', audioProps),
+                (0, _snabbdomJsx.html)('div', { classNames: 'backdrop',
+                    style: { backgroundImage: 'url(' + track.picture + ')' } })
             ) : ''
         );
     }
 };
 module.exports = exports['default'];
-// 'show-actions': state.feed.openActionIds.indexOf(track.id) > -1,
-// 'hide-actions': state.feed.closedActionIds.indexOf(track.id) > -1
 
-},{"../actions/creators/player":26,"../texts":45,"../utils":46,"./Navbar":32,"object-assign":4,"snabbdom-jsx":15}],34:[function(require,module,exports){
+},{"../actions/creators/player":26,"../actions/creators/view":27,"../texts":45,"../utils":46,"./Navbar":32,"object-assign":4,"snabbdom-jsx":15}],34:[function(require,module,exports){
 /** @jsx html */
 'use strict';
 
@@ -2594,10 +2653,12 @@ exports['default'] = {
     openAddTrack: function openAddTrack(evt) {
         evt.preventDefault();
         console.log('TODO: Add Track');
+        window.store.dispatch((0, _actionsCreatorsView.setView)('add-track'));
     },
     openPlayer: function openPlayer(evt) {
         evt.preventDefault();
         window.store.dispatch((0, _actionsCreatorsPlayer.togglePlayer)());
+        window.store.dispatch((0, _actionsCreatorsView.setView)('player'));
     },
     setView: function setView(viewName, evt) {
         evt.preventDefault();
@@ -2613,7 +2674,10 @@ exports['default'] = {
             'nav',
             {
                 id: 'tabbar',
-                'class-hide': state.feed.isScrolling },
+                'class': {
+                    hide: state.feed.isScrolling,
+                    'player-active': state.player.track
+                } },
             (0, _snabbdomJsx.html)(
                 'ul',
                 null,
@@ -2628,7 +2692,12 @@ exports['default'] = {
                         { href: '/feed',
                             title: _texts2['default'].tabbar.feed,
                             'on-click': this.setView.bind(this, 'feed') },
-                        (0, _snabbdomJsx.html)('i', { classNames: 'mf mf-musicfeed' })
+                        (0, _snabbdomJsx.html)('i', {
+                            'class': {
+                                'mf': 1,
+                                'mf-musicfeed-outline': state.view.current !== 'feed',
+                                'mf-musicfeed': state.view.current === 'feed'
+                            } })
                     )
                 ),
                 (0, _snabbdomJsx.html)(
@@ -2642,20 +2711,31 @@ exports['default'] = {
                         { href: '/me',
                             title: _texts2['default'].tabbar.me,
                             'on-click': this.setView.bind(this, 'me') },
-                        (0, _snabbdomJsx.html)('i', { classNames: 'mf mf-person-solid' })
+                        (0, _snabbdomJsx.html)('i', {
+                            'class': {
+                                'mf': 1,
+                                'mf-person-outline': state.view.current !== 'me',
+                                'mf-person-solid': state.view.current === 'me'
+                            } })
                     )
                 ),
                 (0, _snabbdomJsx.html)(
                     'li',
                     { 'class': {
-                            'add-track': 1
+                            'add-track': 1,
+                            active: state.view.current === 'add-track'
                         } },
                     (0, _snabbdomJsx.html)(
                         'a',
                         { href: '/add-track',
                             title: _texts2['default'].tabbar.addTrack,
                             'on-click': this.openAddTrack },
-                        (0, _snabbdomJsx.html)('i', { classNames: 'mf mf-plus-2pt' })
+                        (0, _snabbdomJsx.html)('i', {
+                            'class': {
+                                'mf': 1,
+                                'mf-plus': state.view.current !== 'add-track',
+                                'mf-plus-2pt': state.view.current === 'add-track'
+                            } })
                     )
                 ),
                 (0, _snabbdomJsx.html)(
@@ -2669,13 +2749,19 @@ exports['default'] = {
                         { href: '/search',
                             title: _texts2['default'].tabbar.search,
                             'on-click': this.setView.bind(this, 'search') },
-                        (0, _snabbdomJsx.html)('i', { classNames: 'mf mf-magnifying-glass-2pt' })
+                        (0, _snabbdomJsx.html)('i', {
+                            'class': {
+                                'mf': 1,
+                                'mf-magnifying-glass': state.view.current !== 'search',
+                                'mf-magnifying-glass-2pt': state.view.current === 'search'
+                            } })
                     )
                 ),
                 (0, _snabbdomJsx.html)(
                     'li',
                     { 'class': {
-                            player: 1
+                            player: 1,
+                            active: state.view.current === 'player'
                         } },
                     (0, _snabbdomJsx.html)(
                         'a',
@@ -3099,6 +3185,8 @@ function player(player, action) {
         track: null,
         idx: null,
         progress: 0,
+        elapsed: null,
+        duration: null,
         eq: [.03, .03, .03, .03, .03, .03]
     };
 
@@ -3117,10 +3205,6 @@ function player(player, action) {
             return (0, _objectAssign2['default'])({}, player, {
                 isPlaying: false
             });
-        case _actionsTypes.PLAYER_PROGRESS:
-            return (0, _objectAssign2['default'])({}, player, {
-                progress: action.progress
-            });
         case _actionsTypes.PLAYER_OPEN:
             return (0, _objectAssign2['default'])({}, player, {
                 isOpen: true,
@@ -3131,9 +3215,12 @@ function player(player, action) {
                 isOpen: false,
                 isClosed: true
             });
-        case _actionsTypes.PLAYER_EQ:
+        case _actionsTypes.PLAYER_VISUALIZE:
             return (0, _objectAssign2['default'])({}, player, {
-                eq: action.data
+                eq: action.eq,
+                progress: action.progress,
+                elapsed: action.elapsed,
+                duration: action.duration
             });
         default:
             return player;

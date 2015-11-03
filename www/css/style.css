@@ -546,6 +546,7 @@ a img {
 html,
 body {
   height: 100%;
+  width: 100%;
   overflow: hidden;
 }
 html.iphone4,
@@ -554,35 +555,61 @@ html.iphone5,
 body.iphone5,
 html.iphone6,
 body.iphone6,
-html.iphone6plus,
-body.iphone6plus {
+html.iphone6-plus,
+body.iphone6-plus {
   position: absolute;
-  left: 50%;
-  top: 50%;
+  left: 0;
+  top: 0;
 }
-html.iphone4,
-body.iphone4 {
-  width: 320px;
-  height: 480px;
-  margin: -240px -160px;
+@media (min-width: 321px) {
+  body.iphone4,
+  body.iphone5 {
+    left: 50%;
+    width: 320px;
+    margin-left: -160px;
+  }
 }
-html.iphone5,
-body.iphone5 {
-  width: 320px;
-  height: 568px;
-  margin: -284px -160px;
+@media (min-height: 481px) {
+  body.iphone4 {
+    top: 50%;
+    height: 480px;
+    margin-top: -240px;
+  }
 }
-html.iphone6,
-body.iphone6 {
-  width: 375px;
-  height: 667px;
-  margin: -333.5px -187.5px;
+@media (min-height: 569px) {
+  body.iphone5 {
+    top: 50%;
+    height: 568px;
+    margin-top: -284px;
+  }
 }
-html.iphone6plus,
-body.iphone6plus {
-  width: 414px;
-  height: 736px;
-  margin: -368px -207px;
+@media (min-width: 376px) {
+  body.iphone6 {
+    left: 50%;
+    width: 375px;
+    margin-left: -187.5px;
+  }
+}
+@media (min-height: 668px) {
+  body.iphone6 {
+    top: 50%;
+    height: 667px;
+    margin-top: -333.5px;
+  }
+}
+@media (min-width: 415px) {
+  body.iphone6-plus {
+    left: 50%;
+    width: 414px;
+    margin-left: -207px;
+  }
+}
+@media (min-height: 737px) {
+  body.iphone6-plus {
+    top: 50%;
+    height: 736px;
+    margin-top: -368px;
+  }
 }
 .statusbar {
   position: absolute;
@@ -625,7 +652,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   font-family: 'Helvetica Neue', Helvetica, sans-serif;
-  background-color: #262626;
+  background-color: #808080;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   -webkit-user-select: none;
   user-select: none;
@@ -803,6 +830,7 @@ body {
   width: 100%;
   height: 50px;
   background-color: white;
+  overflow: hidden;
   transition: transform .3s;
 }
 #tabbar:after {
@@ -814,23 +842,32 @@ body {
   height: 1px;
   background-color: rgba(0, 0, 0, 0.15);
 }
+#tabbar ul {
+  width: 200%;
+}
 #tabbar li {
   float: left;
-  width: 20%;
+  width: 12.5%;
   height: 50px;
   line-height: 50px;
   font-size: 32px;
   text-align: center;
-  opacity: .3;
+  transition: width 0.3s cubic-bezier(0, 0, 0.3, 1);
 }
-#tabbar li.active {
-  opacity: 1;
+#tabbar li.active a {
+  color: #1988FF;
+}
+#tabbar li.active.player .eq > div {
+  background-color: #1988FF;
 }
 #tabbar li.me {
-  font-size: 36px;
+  font-size: 34px;
 }
 #tabbar li.add-track {
   font-size: 48px;
+}
+#tabbar li.player {
+  width: 10%;
 }
 #tabbar li.player .eq {
   width: 17px;
@@ -840,11 +877,11 @@ body {
 #tabbar li.player .eq > div {
   display: inline-block;
   vertical-align: bottom;
-  background-color: #201E26;
+  background-color: #85858C;
   width: 2px;
   height: 100%;
-  transform: scaleY(0.03);
-  transform-origin: bottom;
+  transform: scaleY(0.06);
+  transform-origin: center;
 }
 #tabbar li.player .eq > div + div {
   margin-left: 1px;
@@ -855,11 +892,14 @@ body {
   height: 44px;
 }
 #tabbar li a {
-  color: #201E26;
+  color: #85858C;
   padding: 0 10px;
 }
 #tabbar li i:before {
   line-height: 50px;
+}
+#tabbar.player-active li {
+  width: 10%;
 }
 #tabbar.hide {
   transform: translateY(100%);
@@ -1040,7 +1080,7 @@ body {
   width: 4px;
   height: 100%;
   transform: scaleY(0.03);
-  transform-origin: bottom;
+  transform-origin: center;
 }
 #feed .track > div .eq > div + div {
   margin-left: 2px;
@@ -1548,6 +1588,7 @@ body {
   width: 100%;
   height: 100%;
   background: #1a1a1a;
+  overflow: hidden;
   transform: translateY(100%);
 }
 #player.show {
@@ -1558,12 +1599,16 @@ body {
 }
 #player > div,
 #player .cover,
-#player .overlay {
+#player .overlay,
+#player .backdrop,
+#player .progress-bar-base,
+#player .progress-times {
   position: absolute;
   left: 0;
   top: 0;
   width: 100%;
   height: 100%;
+  z-index: 3;
 }
 #player .cover {
   position: relative;
@@ -1581,9 +1626,71 @@ body {
   height: 100%;
   background-image: linear-gradient(to top, rgba(26, 26, 26, 0) 70%, rgba(26, 26, 26, 0.8) 100%);
 }
+#player .progress,
+#player .meta,
+#player audio {
+  position: relative;
+  z-index: 3;
+}
+#player .progress {
+  height: 3px;
+}
+#player .progress .bar {
+  position: relative;
+  height: 100%;
+}
+#player .progress .bar b {
+  display: block;
+  height: 100%;
+  background-color: #e6e6e6;
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 40ms;
+  backface-visibility: hidden;
+}
+#player .progress .bar i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2px;
+  margin-left: -1px;
+  height: 500%;
+  background-color: white;
+  transition: left 40ms;
+  backface-visibility: hidden;
+}
+#player .progress-times,
+#player .progress-bar-base {
+  z-index: 1;
+  margin-top: 100%;
+  height: 3px;
+}
+#player .progress-times {
+  mix-blend-mode: overlay;
+}
+#player .progress-times time {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  font-size: 11px;
+  line-height: 1;
+  color: #808080;
+  margin: 13px;
+}
+#player .progress-times time.duration {
+  left: auto;
+  right: 0;
+}
+#player .progress-bar-base {
+  z-index: 2;
+  margin-top: 100%;
+  height: 3px;
+  background-color: #404040;
+  mix-blend-mode: overlay;
+}
 #player .meta {
   color: white;
-  margin: 9% auto 5%;
+  margin: 12% auto 4%;
   display: table;
   height: 72px;
   width: 86%;
@@ -1604,8 +1711,21 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+#player .backdrop {
+  z-index: 0;
+  background-position: center;
+  background-size: auto 180%;
+  padding: 180px;
+  left: -180px;
+  top: -180px;
+  box-sizing: content-box;
+  background-origin: content-box;
+  -webkit-filter: blur(60px);
+  filter: blur(60px);
+  opacity: .2;
+}
 #player audio {
-  width: 90%;
+  width: 80%;
   margin: 0 auto;
   padding: 15px 0;
   box-sizing: content-box;
