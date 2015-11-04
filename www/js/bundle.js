@@ -1712,7 +1712,8 @@ Object.defineProperty(exports, '__esModule', {
     value: true
 });
 exports.playTrack = playTrack;
-exports.pause = pause;
+exports.startPlayback = startPlayback;
+exports.pausePlayback = pausePlayback;
 exports.togglePlayer = togglePlayer;
 exports.visualize = visualize;
 
@@ -1730,7 +1731,13 @@ function playTrack(track, idx) {
     return function (dispatch, getState) {
         var state = getState();
 
-        if (shouldSetTrack(track, state)) return dispatch(setTrack(track, idx)) && dispatch(start());else if (shouldStart(state)) return dispatch(start());else return null;
+        if (shouldSetTrack(track, state)) return dispatch(setTrack(track, idx)) /*
+                                                                                && dispatch(startPlayback())*/;
+
+        // else if (shouldStart(state))
+        //     return dispatch(startPlayback());
+
+        else return null;
     };
 }
 
@@ -1750,13 +1757,13 @@ function setTrack(track, idx) {
     };
 }
 
-function start() {
+function startPlayback() {
     return {
         type: _types.PLAYER_START
     };
 }
 
-function pause() {
+function pausePlayback() {
     return {
         type: _types.PLAYER_PAUSE
     };
@@ -2022,7 +2029,8 @@ exports['default'] = {
                                     loved: track.is_liked,
                                     'show-actions': state.feed.openActionIds.indexOf(track.id) > -1,
                                     'hide-actions': state.feed.closedActionIds.indexOf(track.id) > -1,
-                                    'is-playing': playerTrackId == track.id
+                                    'is-in-player': playerTrackId == track.id,
+                                    'is-playing': state.player.isPlaying
                                 },
                                 // 'data-cover': track.picture,
                                 style: {
@@ -2069,12 +2077,12 @@ exports['default'] = {
                                     'div',
                                     { classNames: 'eq',
                                         'on-click': _this.openPlayer },
-                                    (0, _snabbdomJsx.html)('div', { style: { transform: 'scaleY(' + Math.max(.03, state.player.eq[0]) + ')' } }),
-                                    (0, _snabbdomJsx.html)('div', { style: { transform: 'scaleY(' + Math.max(.03, state.player.eq[1]) + ')' } }),
-                                    (0, _snabbdomJsx.html)('div', { style: { transform: 'scaleY(' + Math.max(.03, state.player.eq[2]) + ')' } }),
-                                    (0, _snabbdomJsx.html)('div', { style: { transform: 'scaleY(' + Math.max(.03, state.player.eq[3]) + ')' } }),
-                                    (0, _snabbdomJsx.html)('div', { style: { transform: 'scaleY(' + Math.max(.03, state.player.eq[4]) + ')' } }),
-                                    (0, _snabbdomJsx.html)('div', { style: { transform: 'scaleY(' + Math.max(.03, state.player.eq[5]) + ')' } })
+                                    (0, _snabbdomJsx.html)('div', null),
+                                    (0, _snabbdomJsx.html)('div', null),
+                                    (0, _snabbdomJsx.html)('div', null),
+                                    (0, _snabbdomJsx.html)('div', null),
+                                    (0, _snabbdomJsx.html)('div', null),
+                                    (0, _snabbdomJsx.html)('div', null)
                                 ) : '',
                                 (0, _snabbdomJsx.html)('div', { classNames: 'overlay' })
                             )
@@ -2114,7 +2122,16 @@ module.exports = exports['default'];
         <div classNames="actions-blurred-backdrop">
            <div classNames="overlay"/>
            <div classNames="backdrop" style={{backgroundImage: 'url('+track.picture+')'}}/>
-        </div>*/
+        </div>*/ /*playerTrackId == track.id ?
+                 <div classNames="eq"
+                    on-click={this.openPlayer}>
+                    <div style={{transform: 'scaleY('+Math.max(.03, state.player.eq[0])+')'}}/>
+                    <div style={{transform: 'scaleY('+Math.max(.03, state.player.eq[1])+')'}}/>
+                    <div style={{transform: 'scaleY('+Math.max(.03, state.player.eq[2])+')'}}/>
+                    <div style={{transform: 'scaleY('+Math.max(.03, state.player.eq[3])+')'}}/>
+                    <div style={{transform: 'scaleY('+Math.max(.03, state.player.eq[4])+')'}}/>
+                    <div style={{transform: 'scaleY('+Math.max(.03, state.player.eq[5])+')'}}/>
+                 </div> : ''*/
 
 },{"../actions/creators/feed":24,"../actions/creators/player":26,"../actions/creators/view":27,"../texts":45,"../utils":46,"./Navbar":32,"object-assign":4,"snabbdom-jsx":15}],31:[function(require,module,exports){
 /** @jsx html */
@@ -2420,17 +2437,18 @@ var _Navbar2 = _interopRequireDefault(_Navbar);
 
 Object.defineProperty(HTMLMediaElement.prototype, 'isPlaying', {
     get: function get() {
-        return !!(this.currentTime > 0 && !this.paused && !this.ended && this.readyState > 2);
+        return !!( /*this.currentTime > 0 &&*/
+        !this.paused && !this.ended && this.readyState > 2);
     }
 });
 
-function AudioSource(audio, fftSize) {
-    if (!window.AudioContext) return null;
+/*function AudioSource(audio, fftSize) {
+    if (!window.AudioContext)
+        return null;
 
     var _ = this,
-        audioCtx = new AudioContext(),
-        // new (window.AudioContext || window.webkitAudioContext)
-    source = audioCtx.createMediaElementSource(audio);
+        audioCtx = new AudioContext(), // new (window.AudioContext || window.webkitAudioContext)
+        source = audioCtx.createMediaElementSource(audio);
 
     _.analyser = audioCtx.createAnalyser();
     _.analyser.minDecibels = -90;
@@ -2439,8 +2457,8 @@ function AudioSource(audio, fftSize) {
     _.analyser.fftSize = fftSize;
     source.connect(_.analyser);
     _.analyser.connect(audioCtx.destination);
-    _.streamData = new Uint8Array(fftSize / 2);
-}
+    _.streamData = new Uint8Array(fftSize/2);
+}*/
 
 exports['default'] = {
     closePlayer: function closePlayer(state, evt) {
@@ -2465,55 +2483,57 @@ exports['default'] = {
     },
     onInsertAudio: function onInsertAudio(vnode) {
         this.audio = vnode.elm;
-        this.audioSource = new AudioSource(this.audio, 64);
+        // this.audioSource = new AudioSource(this.audio, 64);
 
         this.audio.addEventListener('error', function (evt) {
             return console.log('audio error:', evt);
         }, true);
         this.audio.addEventListener('canplay', this.onCanplay.bind(this), true);
-        this.audio.addEventListener('playing', this.onStartPlayback.bind(this), true);
-        this.audio.addEventListener('pause', this.onPausePlayback.bind(this), true);
+        this.audio.addEventListener('playing', this.onPlaybackStarted.bind(this), true);
+        this.audio.addEventListener('pause', this.onPlaybackPaused.bind(this), true);
     },
     onCanplay: function onCanplay(evt) {
         if (!this.audio.isPlaying) this.audio.play();
     },
-    onStartPlayback: function onStartPlayback() {
+    onPlaybackStarted: function onPlaybackStarted() {
+        window.store.dispatch((0, _actionsCreatorsPlayer.startPlayback)());
         this.visualFeedback();
     },
-    onPausePlayback: function onPausePlayback() {
-        window.store.dispatch((0, _actionsCreatorsPlayer.pause)());
+    onPlaybackPaused: function onPlaybackPaused() {
+        window.store.dispatch((0, _actionsCreatorsPlayer.pausePlayback)());
     },
     visualFeedback: function visualFeedback() {
-        if (!this.audioSource) return;
+        var data = {};
 
-        var eqData = [],
-            i = undefined,
-            j = 0;
+        /*if (this.audioSource) {
+            let eqData = [], i, j = 0;
+             this.audioSource.analyser.getByteFrequencyData(this.audioSource.streamData);
+             // collect freq data for first 12 channels out of 32
+            // (that is the lower end of the spectrum)
+            for (i = 0; i < 12; i++) {
+                let val = this.audioSource.streamData[i] / 255;
+                 // cahce the average of channel 1 and 2, 3 and 4, ...
+                // since we have 6 bars in the graphic eq we want
+                // the length of eqData to be 6
+                eqData[j] = typeof eqData[j] === 'undefined'
+                            ? val
+                            : (eqData[j] + val) / (i % 2 + 1);
+                 if (i != 0 && i % 2 == 0)
+                    j++;
+            }
+            // console.log('eqData:', eqData);
+             data.eq = eqData;
+        }*/
 
-        this.audioSource.analyser.getByteFrequencyData(this.audioSource.streamData);
-
-        // collect freq data for first 12 channels out of 32
-        // (that is the lower end of the spectrum)
-        for (i = 0; i < 12; i++) {
-            var val = this.audioSource.streamData[i] / 255;
-
-            // cahce the average of channel 1 and 2, 3 and 4, ...
-            // since we have 6 bars in the graphic eq we want
-            // the length of eqData to be 6
-            eqData[j] = typeof eqData[j] === 'undefined' ? val : (eqData[j] + val) / (i % 2 + 1);
-
-            if (i != 0 && i % 2 == 0) j++;
-        }
-        // console.log('eqData:', eqData);
-
-        window.store.dispatch((0, _actionsCreatorsPlayer.visualize)({
-            eq: eqData,
+        window.store.dispatch((0, _actionsCreatorsPlayer.visualize)((0, _objectAssign2['default'])(data, {
             elapsed: this.audio.currentTime,
             duration: this.audio.duration
-        }));
+        })));
 
-        if (this.audio.isPlaying) setTimeout(this.visualFeedback.bind(this), 40);
-        // requestAnimationFrame(this.visualFeedback.bind(this));
+        if (this.audio.isPlaying) {
+            setTimeout(this.visualFeedback.bind(this), 40);
+            // requestAnimationFrame(this.visualFeedback.bind(this));
+        }
     },
     fmtTime: function fmtTime(secs) {
         var f = Math.floor;
@@ -2680,7 +2700,8 @@ exports['default'] = {
                 id: 'tabbar',
                 'class': {
                     hide: state.feed.isScrolling,
-                    'player-active': state.player.track
+                    'player-active': state.player.track,
+                    'player-playing': state.player.isPlaying
                 } },
             (0, _snabbdomJsx.html)(
                 'ul',
@@ -2775,12 +2796,12 @@ exports['default'] = {
                         (0, _snabbdomJsx.html)(
                             'div',
                             { classNames: 'eq' },
-                            (0, _snabbdomJsx.html)('div', { style: { transform: 'scaleY(' + Math.max(.06, state.player.eq[0]) + ')' } }),
-                            (0, _snabbdomJsx.html)('div', { style: { transform: 'scaleY(' + Math.max(.06, state.player.eq[1]) + ')' } }),
-                            (0, _snabbdomJsx.html)('div', { style: { transform: 'scaleY(' + Math.max(.06, state.player.eq[2]) + ')' } }),
-                            (0, _snabbdomJsx.html)('div', { style: { transform: 'scaleY(' + Math.max(.06, state.player.eq[3]) + ')' } }),
-                            (0, _snabbdomJsx.html)('div', { style: { transform: 'scaleY(' + Math.max(.06, state.player.eq[4]) + ')' } }),
-                            (0, _snabbdomJsx.html)('div', { style: { transform: 'scaleY(' + Math.max(.06, state.player.eq[5]) + ')' } })
+                            (0, _snabbdomJsx.html)('div', null),
+                            (0, _snabbdomJsx.html)('div', null),
+                            (0, _snabbdomJsx.html)('div', null),
+                            (0, _snabbdomJsx.html)('div', null),
+                            (0, _snabbdomJsx.html)('div', null),
+                            (0, _snabbdomJsx.html)('div', null)
                         )
                     )
                 )
@@ -2789,6 +2810,14 @@ exports['default'] = {
     }
 };
 module.exports = exports['default'];
+/*<div classNames="eq">
+   <div style={{transform: 'scaleY('+Math.max(.06, state.player.eq[0])+')'}}/>
+   <div style={{transform: 'scaleY('+Math.max(.06, state.player.eq[1])+')'}}/>
+   <div style={{transform: 'scaleY('+Math.max(.06, state.player.eq[2])+')'}}/>
+   <div style={{transform: 'scaleY('+Math.max(.06, state.player.eq[3])+')'}}/>
+   <div style={{transform: 'scaleY('+Math.max(.06, state.player.eq[4])+')'}}/>
+   <div style={{transform: 'scaleY('+Math.max(.06, state.player.eq[5])+')'}}/>
+</div>*/
 
 },{"../actions/creators/player":26,"../actions/creators/view":27,"../texts":45,"snabbdom-jsx":15}],36:[function(require,module,exports){
 /** @jsx html */
@@ -3181,7 +3210,9 @@ var _objectAssign2 = _interopRequireDefault(_objectAssign);
 
 var _actionsTypes = require('../actions/types');
 
-function player(player, action) {
+function player(player,
+// eq: [.03,.03,.03,.03,.03,.03]
+action) {
     if (player === undefined) player = {
         isOpen: false,
         isClosed: false,
@@ -3190,9 +3221,7 @@ function player(player, action) {
         idx: null,
         progress: 0,
         elapsed: null,
-        duration: null,
-        eq: [.03, .03, .03, .03, .03, .03]
-    };
+        duration: null };
 
     switch (action.type) {
         case _actionsTypes.PLAYER_SET_TRACK:
