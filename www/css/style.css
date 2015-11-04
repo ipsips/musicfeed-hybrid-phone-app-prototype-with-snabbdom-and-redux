@@ -726,19 +726,19 @@ body {
 }
 @keyframes eqBarJump {
   0% {
-    transform: scaleY(0.2);
-  }
-  25% {
-    transform: scaleY(0.5);
-  }
-  50% {
     transform: scaleY(0.3);
   }
-  75% {
+  25% {
     transform: scaleY(0.7);
   }
+  50% {
+    transform: scaleY(0.4);
+  }
+  75% {
+    transform: scaleY(1);
+  }
   100% {
-    transform: scaleY(0.2);
+    transform: scaleY(0.3);
   }
 }
 .navbar {
@@ -888,7 +888,7 @@ body {
 }
 #tabbar li.player .eq {
   width: 17px;
-  height: 26px;
+  height: 20px;
   line-height: 20px;
 }
 #tabbar li.player .eq > div {
@@ -1109,9 +1109,9 @@ body {
   left: 50%;
   top: 55%;
   width: 34px;
-  height: 60px;
-  line-height: 60px;
-  margin: -30px -17px;
+  height: 50px;
+  line-height: 50px;
+  margin: -25px -17px;
 }
 #feed .track > div .eq > div {
   display: inline-block;
