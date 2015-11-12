@@ -1,10 +1,10 @@
 {
-  "name": "musicfeed-ios-app-prototyping",
+  "name": "musicfeed-phone-app-prototype",
   "version": "0.1.0",
   "authors": [
     "ips <ips@musicfeed.co>"
   ],
-  "license": "proprietary",
+  "license": "UNLICENSED",
   "private": true,
   "devDependencies": {
     "lesshat": "~3.0.2"

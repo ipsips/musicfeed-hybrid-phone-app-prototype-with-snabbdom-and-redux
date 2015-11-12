@@ -1,0 +1,190 @@
+@charset 'UTF-8';
+
+@import (reference) 'bower_components/lesshat/build/lesshat.less';
+@import (reference) 'styles/inc/musicfeed-icons.less';
+@import (reference) 'styles/inc/mixins.less';
+
+#me,
+#profile {
+    @headProfilePicSize: 80px;
+    @profileHeadOverlayColor: hsl(0, 0%, 10%);
+    .head {
+        position: absolute;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 190px;
+        overflow: hidden;
+
+        .profile-pic,
+        .name,
+        .followings {
+            position: absolute;
+            z-index: 1;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+        }
+
+        .profile-pic {
+            left: 50%;
+            top: 35px;
+            width: @headProfilePicSize;
+            height: @headProfilePicSize;
+            margin-left: -(@headProfilePicSize / 2);
+            border-radius: 100%;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .name {
+            top: 125px;
+            font-size: 17px;
+        }
+        
+        .followings {
+            top: 155px;
+            font-size: 12px;
+
+            li {
+                display: inline-block;
+
+                +li:before {
+                    content: '\00a0\00a0\00a0·\00a0\00a0\00a0'
+                }
+            }
+        }
+
+        a {
+            color: fade(white, 50%);
+            text-decoration: none;
+            transition: color .15s;
+
+            &:hover,
+            &:active { color: white; }
+        }
+
+        .backdrop {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 133.33%;
+            padding-top: 133.33%;
+            margin: -(133.33% / 2);
+            background-size: cover;
+            background-position: center;
+            -webkit-filter: blur(25px);
+            filter: blur(25px);
+        }
+
+        // overlay
+        &:before {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            content: '';
+            z-index: 1;
+            background-color: fade(@profileHeadOverlayColor, 60%);
+            background-blend-mode: multiply;
+        }
+    }
+
+    @profileMenuHeight: 44px;
+    .menu {
+        position: absolute;
+        z-index: 2;
+        left: 0;
+        top: 190px;
+        width: 100%;
+        height: @profileMenuHeight;
+        background-color: white;
+        box-shadow: 0 0 0 1px fade(black, 15%);
+
+        ul {
+            display: table;
+            width: 100%;
+            height: @profileMenuHeight;
+        }
+
+        li {
+            display: table-cell;
+            text-align: center;
+            line-height: @profileMenuHeight;
+
+            &.active a { color: @black; }
+        }
+
+        a {
+            text-decoration: none;
+            color: fade(@black, 40%);
+
+            &:hover,
+            &:active { color: @black; }
+        }
+    }
+
+    .sections-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        padding-top: 234px; // head + menu height
+        padding-bottom: 50px; // tabbar height
+
+        >div {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    &.empty,
+    &.loading {
+        .head {
+            &:before { background-color: mix(@black, white, 30%); }
+            .name { color: @lightGray; }
+        }
+    }
+
+    &.loading {
+        .head:after,
+        .sections-container >div:after {
+            font-family: "Musicfeed Icons 2.0";
+            content: '\F000';
+            line-height: 1;
+            position: absolute;
+            left: 50%;
+            animation: funkySpin 3s cubic-bezier(0.680, -0.550, 0.265, 1.550) infinite;
+        }
+
+        .head {
+            &:after {
+                z-index: 2;
+                color: @lightGray;
+                font-size: @headProfilePicSize * 1.325;
+                top: 22px;
+                width: @headProfilePicSize * 1.325;
+                height: @headProfilePicSize * 1.325;
+                margin-left: -(@headProfilePicSize * 1.325 / 2);
+            }
+        }
+
+        .sections-container {
+            padding-top: 190px; // head height
+
+            >div:after {
+                color: mix(@black, white, 30%);
+                font-size: @spinnerSize;
+                top: 50%;
+                width: @spinnerSize;
+                height: @spinnerSize;
+                margin: -(@spinnerSize / 2);
+            }
+        }
+    }
+}
